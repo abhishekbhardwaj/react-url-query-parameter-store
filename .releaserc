@@ -1,0 +1,35 @@
+{
+    "branches": [
+        "main",
+        { "name": "beta", "channel": "beta", "prerelease": true }
+    ],
+    "plugins": [
+        "@semantic-release/commit-analyzer",
+        "@semantic-release/release-notes-generator",
+        [
+            "@semantic-release/changelog",
+            {
+                "changelogFile": "changelog.md"
+            }
+        ],
+        [
+            "@semantic-release/npm",
+            {
+                "pkgRoot": "dist",
+                "tarballDir": "pack"
+            }
+        ],
+        [
+            "@semantic-release/github",
+            {
+                "assets": "pack/*.tgz"
+            }
+        ],
+        [
+            "@semantic-release/git",
+            {
+                "assets": ["changelog.md"]
+            }
+        ]
+    ]
+}
