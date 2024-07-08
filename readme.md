@@ -6,7 +6,87 @@
 [![License](https://badgen.net/npm/license/react-url-query-parameter-store)](https://www.npmjs.com/package/react-url-query-parameter-store)
 [![Bundle Size (Minified and Zipped)](https://img.shields.io/bundlephobia/minzip/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
 
-URL Query Parameters Management tool for React. In a way also a state manager but not really. It's main use-case is for type-safe query string validation across the app.
+An Efficient Query Parameter Management Tool for React
+
+This library provides a robust solution for managing URL query parameters in React applications, with a focus on type-safety and efficiency. While it's not a traditional state management store, it offers powerful capabilities for handling query string validation and synchronization across your app.
+
+Currently only works with Next.js's router but **support for other prominent routers** will be **added soon**.
+
+## Use Cases
+
+1. Search and Filter Functionality:
+   Manage complex search parameters and filters in e-commerce or content-heavy applications.
+
+   ```typescript
+   import { z } from "zod";
+   import { createUseQueryParams } from "@/query-parameter-store";
+
+   const searchSchema = z.object({
+     query: z.string().optional(),
+     category: z.string().optional(),
+     minPrice: z.number().optional(),
+     maxPrice: z.number().optional(),
+     sortBy: z.enum(["price", "relevance", "rating"]).optional(),
+   });
+
+   const useSearchParams = createUseQueryParams(searchSchema);
+
+   function SearchComponent() {
+     const [searchParams, setSearchParams] = useSearchParams();
+
+     // Use searchParams in your component
+     // Update params with setSearchParams
+   }
+   ```
+
+2. Pagination State:
+   Maintain page numbers and size in the URL for easy sharing and navigation.
+
+   ```typescript
+   import { z } from "zod";
+   import { createUseQueryParam } from "@/query-parameter-store";
+
+   const paginationSchema = z.object({
+     page: z.number().int().positive().default(1),
+     pageSize: z.number().int().positive().default(20),
+   });
+
+   const usePaginationParam = createUseQueryParam(paginationSchema);
+
+   function PaginatedList() {
+     const [page, setPage] = usePaginationParam("page");
+     const [pageSize, setPageSize] = usePaginationParam("pageSize");
+
+     // Use page and pageSize in your component
+     // Update with setPage and setPageSize
+   }
+   ```
+
+3. Form State Persistence:
+   Keep form state in the URL for multi-step forms or to allow users to share partially filled forms.
+
+   ```typescript
+   import { z } from "zod";
+   import { createUseQueryParams } from "@/query-parameter-store";
+
+   const formSchema = z.object({
+     name: z.string().optional(),
+     email: z.string().email().optional(),
+     age: z.number().int().positive().optional(),
+   });
+
+   const useFormParams = createUseQueryParams(formSchema);
+
+   function UserForm() {
+     const [formData, setFormData] = useFormParams();
+
+     // Use formData in your form
+     // Update with setFormData on input changes
+   }
+   ```
+
+Additionally, this library can serve as a lightweight state management solution for React/Next.js applications, leveraging URL query parameters as the source of truth. By using `useSyncExternalStore`, it ensures efficient updates and synchronization across components in a highly performant way.
+
 Currently only works with Next.js's router but **support for other prominent routers** will be **added soon**.
 
 Uses:
