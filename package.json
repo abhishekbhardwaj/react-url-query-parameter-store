@@ -8,14 +8,14 @@
   },
   "author": "Abhishek Bhardwaj <abhishek66ster@gmail.com>",
   "license": "MIT",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/esm/index.d.ts",
+  "main": "./dist/cjs/src/index.js",
+  "module": "./dist/esm/src/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "exports": {
-    "types": "./dist/esm/index.d.ts",
-    "require": "./dist/cjs/index.js",
-    "import": "./dist/esm/index.js",
-    "default": "./dist/esm/index.js"
+    "types": "./dist/cjs/index.d.ts",
+    "require": "./dist/cjs/src/index.js",
+    "import": "./dist/esm/src/index.js",
+    "default": "./dist/esm/src/index.js"
   },
   "files": [
     "/dist"
