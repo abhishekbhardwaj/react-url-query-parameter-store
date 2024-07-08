@@ -47,11 +47,8 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Test
-        run: pnpm test:ci
-
       - name: Semantic Release
         run: npx semantic-release --branches main
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

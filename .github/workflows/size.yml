@@ -37,5 +37,5 @@ jobs:
 
       - uses: andresz1/size-limit-action@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           skip_step: install

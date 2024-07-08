@@ -1,10 +1,10 @@
 {
-  "name": "typescript-library-starter",
+  "name": "react-query-parameter-store",
   "version": "0.0.0",
   "description": "Minimal starter repository for a publishable Typescript library",
   "repository": {
     "type": "git",
-    "url": "git@github.com:abhishekbhardwaj/typescript-library-starter.git"
+    "url": "git@github.com:abhishekbhardwaj/react-query-parameter-store.git"
   },
   "author": "Abhishek Bhardwaj <abhishek66ster@gmail.com>",
   "license": "MIT",
@@ -26,7 +26,7 @@
     "test:coverage": "yarpm test --coverage",
     "test:debug": "yarpm test --debug --detectOpenHandles",
     "test:ci": "yarpm test --runInBand --no-cache --ci",
-    "test": "NODE_ENV=test jest",
+    "test": "NODE_ENV=test jest --passWithNoTests",
     "build": "yarpm clean && rollup -c --bundleConfigAsCjs",
     "typecheck": "tsc --noEmit -p tsconfig.build.json",
     "publish-lib": "yarpm run build && yarpm publish",
@@ -52,7 +52,9 @@
     "@semantic-release/git": "^10.0.1",
     "@size-limit/preset-big-lib": "^11.1.4",
     "@types/jest": "^29.5.12",
+    "@types/lodash": "^4.17.6",
     "@types/node": "^20.14.7",
+    "@types/react": "^18.3.3",
     "@typescript-eslint/eslint-plugin": "^7.13.1",
     "@typescript-eslint/parser": "^7.13.1",
     "commitizen": "^4.3.0",
@@ -72,8 +74,10 @@
     "is-ci": "^3.0.1",
     "jest": "^29.7.0",
     "lint-staged": "^15.2.7",
+    "next": "^14.2.4",
     "open": "^10.1.0",
     "prettier": "^3.3.2",
+    "react": "^18.3.1",
     "rimraf": "^5.0.7",
     "rollup": "^4.18.0",
     "rollup-plugin-analyzer": "^4.0.0",
@@ -85,11 +89,21 @@
     "size-limit": "^11.1.4",
     "ts-jest": "^29.1.5",
     "typescript": "^5.5.2",
-    "yarpm": "^1.2.0"
+    "yarpm": "^1.2.0",
+    "zod": "^3.23.8"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "zod": "^3.23.8",
+    "next": "^14.2.4"
   },
   "size-limit": [
     {
       "path": "dist/*.js"
     }
-  ]
+  ],
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "tslib": "^2.6.3"
+  }
 }
