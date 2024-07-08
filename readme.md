@@ -4,8 +4,7 @@
 [![Version](https://badgen.net/npm/v/react-url-query-parameter-store)](https://www.npmjs.com/package/react-url-query-parameter-store)
 [![Total Downloads](https://badgen.net/npm/dt/react-url-query-parameter-store)](https://www.npmjs.com/package/react-url-query-parameter-store)
 [![License](https://badgen.net/npm/license/react-url-query-parameter-store)](https://www.npmjs.com/package/react-url-query-parameter-store)
-[![Bundle Size (Minified)](https://badgen.net/bundlephobia/min/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
-[![Bundle Size (Minified and Zipped)](https://badgen.net/bundlephobia/minzip/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
+[![Bundle Size (Minified and Zipped)](https://img.shields.io/bundlephobia/minzip/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
 
 This is a state management tool for React that is entirely based on top of URL Query Parameters.
 Currently only works with Next.js's router but **support for other prominent routers** will be **added soon**.
