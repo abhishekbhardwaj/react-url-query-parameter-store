@@ -1,11 +1,11 @@
-# react-query-parameter-store
+# react-url-query-parameter-store
 
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
-[![CI Workflow](https://github.com/abhishekbhardwaj/react-query-parameter-store/actions/workflows/ci.yml/badge.svg)](https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/adding-a-workflow-status-badge)
-[![Bundle Size (Minified)](https://badgen.net/bundlephobia/min/react-query-parameter-store)](https://bundlephobia.com/package/react-query-parameter-store)
-[![Bundle Size (Minified and Zipped)](https://badgen.net/bundlephobia/minzip/react-query-parameter-store)](https://bundlephobia.com/package/react-query-parameter-store)
-[![Dependency Count](https://badgen.net/bundlephobia/dependency-count/react-query-parameter-store)](https://bundlephobia.com/package/react-query-parameter-store)
-[![Tree Shaking](https://badgen.net/bundlephobia/tree-shaking/react-query-parameter-store)](https://bundlephobia.com/package/react-query-parameter-store)
+[![CI Workflow](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/actions/workflows/ci.yml/badge.svg)](https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/adding-a-workflow-status-badge)
+[![Bundle Size (Minified)](https://badgen.net/bundlephobia/min/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
+[![Bundle Size (Minified and Zipped)](https://badgen.net/bundlephobia/minzip/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
+[![Dependency Count](https://badgen.net/bundlephobia/dependency-count/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
+[![Tree Shaking](https://badgen.net/bundlephobia/tree-shaking/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
 
 This is a state management tool for React that is entirely based on top of URL Query Parameters.
 
@@ -21,7 +21,7 @@ This is a state management tool for React that is entirely based on top of URL Q
 ## Installation
 
 ```
-pnpm i react-query-parameter-store
+pnpm i react-url-query-parameter-store
 ```
 
 It requires you to have the following packages pre-installed at minimum in your project:

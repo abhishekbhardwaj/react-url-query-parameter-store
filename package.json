@@ -1,10 +1,10 @@
 {
-  "name": "react-query-parameter-store",
+  "name": "react-url-query-parameter-store",
   "version": "0.0.0",
   "description": "Minimal starter repository for a publishable Typescript library",
   "repository": {
     "type": "git",
-    "url": "git@github.com:abhishekbhardwaj/react-query-parameter-store.git"
+    "url": "git@github.com:abhishekbhardwaj/react-url-query-parameter-store.git"
   },
   "author": "Abhishek Bhardwaj <abhishek66ster@gmail.com>",
   "license": "MIT",
