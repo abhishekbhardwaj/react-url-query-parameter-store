@@ -7,6 +7,13 @@
 [![Tree Shaking](https://badgen.net/bundlephobia/tree-shaking/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
 
 This is a state management tool for React that is entirely based on top of URL Query Parameters.
+Currently only works with Next.js's router but **support for other prominent routers** will be **added soon**.
+
+Uses:
+
+- `zod` to ensure run-time typesafety.
+- `useSyncExternalStore` for efficient updates.
+- `lodash/isEqual` and `lodash/pick` as utility functions.
 
 ## Features
 
@@ -15,12 +22,28 @@ This is a state management tool for React that is entirely based on top of URL Q
 - Seamless integration with Next.js Router. **Support for other routers will come soon.**
 - Support for single and multiple query parameters
 - Customizable router push options
+  - Performs shallow routing by default but this is customizable for the entire store or just on a per-use basis.
 - Server-side rendering support
+  - Allows you to specify initial query values when the router itself is not ready.
+- Listens for URL updates outside of the hooks and makes sure its own stateis always up to date.
+- The library internally does shallow comparisons to prevent unnecessary re-renders.
 
 ## Installation
 
 ```
 pnpm i react-url-query-parameter-store
+```
+
+or
+
+```
+npm i react-url-query-parameter-store
+```
+
+or
+
+```
+yarn add react-url-query-parameter-store
 ```
 
 It requires you to have the following packages pre-installed at minimum in your project:
@@ -32,6 +55,8 @@ It requires you to have the following packages pre-installed at minimum in your 
   "next": "^14.2.4"
 }
 ```
+
+> Note: It may work with older versions of the packages above too. I have personally tested it with Next 12.0.0 and it worked.
 
 ## Usage
 
@@ -45,6 +70,12 @@ const searchParamsSchema = z.object({
   sortBy: z.array(z.string()).optional(),
 });
 
+/**
+ * - if `shallow` is not passed, it's `true`. Shallow routing by default.
+ * - `locale`: no default value
+ * - `scroll` is defaulted to `true` by the Router if not passed
+ * - `useExistingParams` is defaulted to false - Merge with existing query params (not next router standard).
+ */
 const routerPushOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true, useExistingParams: true };
 
 const useSearchQueryParam = createUseQueryParam(searchParams, routerPushOptions);
@@ -67,6 +98,7 @@ console.log(search, sortBy, searchParams);
  * - if `shallow` is not passed, it's `true`.
  * - `locale`: no default value
  * - `scroll` is defaulted to `true` by the Router if not passed
+ * - `useExistingParams` is defaulted to false - Merge with existing query params (not next router standard).
  */
 setSearch(VALUE, { ...routerPushOptions, ...ANYTHING THAT YOU MAY WANT TO OVERRIDE... });
 
@@ -125,7 +157,7 @@ Returns a hook that provides:
 
 Options for customizing router.push behavior:
 
-- `useExistingParams`: Merge with existing params (default: false)
+- `useExistingParams`: Merge with existing query params (default: false)
 - `shallow`: Perform shallow routing (default: true)
 - `locale`: Specify locale for internationalized routing
 - `scroll`: Control scrolling behavior (default: true)

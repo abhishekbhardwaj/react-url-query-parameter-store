@@ -30,6 +30,7 @@ const createQueryParamStore = <P extends z.ZodType>(
   const subscribers = new Set<() => void>()
   let cachedSnapshot: z.infer<P> | null = null
 
+  // Attempt to parse the query using the provided schema
   const parseQuery = (query: ParsedUrlQuery): z.infer<P> => {
     const parsedQuery = schema.safeParse(query)
 
@@ -37,11 +38,13 @@ const createQueryParamStore = <P extends z.ZodType>(
       return parsedQuery.data as P
     }
 
+    // If parsing fails, log the error and return an empty object that matches the schema
     console.error('parseQuery.safeParse', parsedQuery.error)
     return schema.parse({}) as Partial<z.infer<P>>
   }
 
   const store: QueryParamStore<z.infer<P>> = {
+    // Get the current query params
     getSnapshot: (initialQuery: ParsedUrlQuery = {}) => {
       // Server-side
       if (typeof window === 'undefined') {
@@ -60,10 +63,12 @@ const createQueryParamStore = <P extends z.ZodType>(
 
       return cachedSnapshot as P
     },
+    // Subscribe to changes
     subscribe: (callback: () => void) => {
       subscribers.add(callback)
       return () => subscribers.delete(callback)
     },
+    // Set new query params
     setQueryParams: (newParams: Partial<z.infer<P>>, options: SetRouterQueryParamsOptions = {}) => {
       if (typeof window === 'undefined') {
         console.warn('createQueryParamStore.store.setQueryParams.serverSideUsageError')
@@ -83,6 +88,7 @@ const createQueryParamStore = <P extends z.ZodType>(
           undefined,
           pick(
             {
+              // Merge default options, global routerPushOptions, and per-call options
               // defaults
               shallow: true,
               ...routerPushOptions,
@@ -92,7 +98,8 @@ const createQueryParamStore = <P extends z.ZodType>(
           ),
         )
           .then(() => {
-            cachedSnapshot = null // Invalidate cache
+            // Invalidate cache to force re-fetch on next getSnapshot
+            cachedSnapshot = null
             subscribers.forEach((callback) => callback())
           })
           .catch((e) => {
@@ -116,6 +123,7 @@ const createUseQueryParamStore = <P extends z.ZodType>(queryParamStore: QueryPar
     const state = useSyncExternalStore(
       queryParamStore.subscribe,
       () => {
+        // Use the appropriate snapshot based on whether the router is ready
         const snapshot = isReady ? queryParamStore.getSnapshot() : queryParamStore.getSnapshot(initialQuery)
 
         lastParsedQueryRef.current = snapshot
@@ -131,11 +139,12 @@ const createUseQueryParamStore = <P extends z.ZodType>(queryParamStore: QueryPar
         if (!isEqual(newSnapshot, lastParsedQueryRef.current)) {
           lastParsedQueryRef.current = newSnapshot
           queryParamStore.subscribe(() => {
-            // Trigger update
+            // Trigger update with an empty object to force re-render
           })
         }
       }
 
+      // Listen for route changes to update the query parameters made outside of the hook
       Router.events.on('routeChangeComplete', handleRouteChange)
       return () => {
         Router.events.off('routeChangeComplete', handleRouteChange)
