@@ -1,7 +1,7 @@
 {
   "name": "react-url-query-parameter-store",
   "version": "0.0.0",
-  "description": "Minimal starter repository for a publishable Typescript library",
+  "description": "State management tool for React / Next.js that is entirely based on top of URL Query Parameters. Uses useSyncExternalStore.",
   "repository": {
     "type": "git",
     "url": "git@github.com:abhishekbhardwaj/react-url-query-parameter-store.git"
