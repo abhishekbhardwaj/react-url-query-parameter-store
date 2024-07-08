@@ -129,6 +129,55 @@ router.push(
 );
 ```
 
+### Next.js Page Router Example
+
+```tsx
+import { z } from "zod";
+import { useRouter } from 'next/router';
+import { NextPage, GetServerSideProps, InferGetServerSidePropsType } from 'next';
+import { type ParsedUrlQuery } from 'querystring';
+import { type SetRouterQueryParamsOptions, createUseQueryParam, createUseQueryParams } from './query-param-store'
+
+const searchParamsSchema = z.object({
+  search: z.string().optional(),
+  sortBy: z.array(z.string()).optional(),
+});
+
+/**
+ * - if `shallow` is not passed, it's `true`. Shallow routing by default.
+ * - `locale`: no default value
+ * - `scroll` is defaulted to `true` by the Router if not passed
+ * - `useExistingParams` is defaulted to false - Merge with existing query params (not next router standard).
+ */
+const routerPushOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true, useExistingParams: true };
+
+const useSearchQueryParam = createUseQueryParam(searchParams, routerPushOptions);
+const useSearchQueryParams = createUseQueryParams(searchParamsSchema, routerPushOptions);
+
+const Home: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = ({ query }) => {
+  const [search, setSearch] = useSearchQueryParam("search", initialQueryParams);
+  const [sortBy, setSortBy] = useSearchQueryParam("sortBy", initialQueryParams);
+
+  const [searchParams, setSearchParams] = useSearchQueryParams(initialQueryParams);
+
+  console.log(search, sortBy, searchParams);
+
+  /// RENDER CODE
+}
+
+export const getServerSideProps: GetServerSideProps<{
+  query: ParsedUrlQuery
+}> = async (ctx) => {
+  return {
+    props: {
+      query: ctx.query,
+    }
+  };
+}
+
+export default Home
+```
+
 ## API Reference
 
 ### `createUseQueryParam(schema, routerPushOptions?)`
