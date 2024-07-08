@@ -12,6 +12,7 @@ jobs:
   release:
     name: Build, lint, test, release the library.
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - name: Checkout
