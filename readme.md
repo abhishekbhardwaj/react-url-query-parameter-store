@@ -6,7 +6,7 @@
 [![License](https://badgen.net/npm/license/react-url-query-parameter-store)](https://www.npmjs.com/package/react-url-query-parameter-store)
 [![Bundle Size (Minified and Zipped)](https://img.shields.io/bundlephobia/minzip/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
 
-This is a state management tool for React that is entirely based on top of URL Query Parameters.
+URL Query Parameters Management tool for React. In a way also a state manager but not really. It's main use-case is for type-safe query string validation across the app.
 Currently only works with Next.js's router but **support for other prominent routers** will be **added soon**.
 
 Uses:
