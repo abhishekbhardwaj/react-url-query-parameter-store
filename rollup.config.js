@@ -74,6 +74,7 @@ export default {
               scripts,
               devDependencies,
               'size-limit': sizeLimit,
+              packageManager,
               ...pkg
             } = JSON.parse(contents.toString())
 

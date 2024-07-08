@@ -105,5 +105,6 @@
   "dependencies": {
     "lodash": "^4.17.21",
     "tslib": "^2.6.3"
-  }
+  },
+  "packageManager": "pnpm@9.2.0"
 }
