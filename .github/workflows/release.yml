@@ -8,6 +8,11 @@ on:
         required: false
         default: main
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   release:
     name: Build, lint, test, release the library.
@@ -51,5 +56,5 @@ jobs:
       - name: Semantic Release
         run: npx semantic-release --branches main
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

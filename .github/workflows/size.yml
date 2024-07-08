@@ -2,6 +2,11 @@ name: Performance budget tool for JavaScript to calculate the real cost of your 
 
 on: [pull_request]
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
 jobs:
   size:
     runs-on: ubuntu-latest
@@ -37,5 +42,5 @@ jobs:
 
       - uses: andresz1/size-limit-action@v1
         with:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           skip_step: install
