@@ -1,7 +1,6 @@
 # react-url-query-parameter-store
 
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
-[![CI Workflow](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/actions/workflows/ci.yml/badge.svg)](https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/adding-a-workflow-status-badge)
 [![Bundle Size (Minified)](https://badgen.net/bundlephobia/min/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
 [![Bundle Size (Minified and Zipped)](https://badgen.net/bundlephobia/minzip/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
 [![Dependency Count](https://badgen.net/bundlephobia/dependency-count/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
