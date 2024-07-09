@@ -8,86 +8,13 @@
 
 An Efficient Query Parameter Management Tool for React
 
-This library provides a robust solution for managing URL query parameters in React applications, with a focus on type-safety and efficiency. While it's not a traditional state management store, it offers powerful capabilities for handling query string validation and synchronization across your app.
+`react-url-query-parameter-store` is an efficient query parameter management tool for React. It provides a robust solution for managing URL query parameters in React applications, with a focus on type-safety and efficiency.
+
+While it's not a traditional state management store, it offers powerful capabilities for handling query string validation and synchronization across your app.
 
 Currently only works with Next.js's router but **support for other prominent routers** will be **added soon**.
-
-## Use Cases
-
-1. Search and Filter Functionality:
-   Manage complex search parameters and filters in e-commerce or content-heavy applications.
-
-   ```typescript
-   import { z } from "zod";
-   import { createUseQueryParams } from "@/query-parameter-store";
-
-   const searchSchema = z.object({
-     query: z.string().optional(),
-     category: z.string().optional(),
-     minPrice: z.number().optional(),
-     maxPrice: z.number().optional(),
-     sortBy: z.enum(["price", "relevance", "rating"]).optional(),
-   });
-
-   const useSearchParams = createUseQueryParams(searchSchema);
-
-   function SearchComponent() {
-     const [searchParams, setSearchParams] = useSearchParams();
-
-     // Use searchParams in your component
-     // Update params with setSearchParams
-   }
-   ```
-
-2. Pagination State:
-   Maintain page numbers and size in the URL for easy sharing and navigation.
-
-   ```typescript
-   import { z } from "zod";
-   import { createUseQueryParam } from "@/query-parameter-store";
-
-   const paginationSchema = z.object({
-     page: z.number().int().positive().default(1),
-     pageSize: z.number().int().positive().default(20),
-   });
-
-   const usePaginationParam = createUseQueryParam(paginationSchema);
-
-   function PaginatedList() {
-     const [page, setPage] = usePaginationParam("page");
-     const [pageSize, setPageSize] = usePaginationParam("pageSize");
-
-     // Use page and pageSize in your component
-     // Update with setPage and setPageSize
-   }
-   ```
-
-3. Form State Persistence:
-   Keep form state in the URL for multi-step forms or to allow users to share partially filled forms.
-
-   ```typescript
-   import { z } from "zod";
-   import { createUseQueryParams } from "@/query-parameter-store";
-
-   const formSchema = z.object({
-     name: z.string().optional(),
-     email: z.string().email().optional(),
-     age: z.number().int().positive().optional(),
-   });
-
-   const useFormParams = createUseQueryParams(formSchema);
-
-   function UserForm() {
-     const [formData, setFormData] = useFormParams();
-
-     // Use formData in your form
-     // Update with setFormData on input changes
-   }
-   ```
 
 Additionally, this library can serve as a lightweight state management solution for React/Next.js applications, leveraging URL query parameters as the source of truth. By using `useSyncExternalStore`, it ensures efficient updates and synchronization across components in a highly performant way.
-
-Currently only works with Next.js's router but **support for other prominent routers** will be **added soon**.
 
 Uses:
 
@@ -95,18 +22,6 @@ Uses:
 - `useSyncExternalStore` for efficient updates.
 - `lodash/isEqual` and `lodash/pick` as utility functions.
 
-## Features
-
-- Manage application state using URL query parameters
-- Type-safe with Zod schema validation
-- Seamless integration with Next.js Router. **Support for other routers will come soon.**
-- Support for single and multiple query parameters
-- Customizable router push options
-  - Performs shallow routing by default but this is customizable for the entire store or just on a per-use basis.
-- Server-side rendering support
-  - Allows you to specify initial query values when the router itself is not ready.
-- Listens for URL updates outside of the hooks and makes sure its own stateis always up to date.
-- The library internally does shallow comparisons to prevent unnecessary re-renders.
 
 ## Installation
 
@@ -138,12 +53,43 @@ It requires you to have the following packages pre-installed at minimum in your 
 
 > Note: It may work with older versions of the packages above too. I have personally tested it with Next 12.0.0 and it worked.
 
+## Features
+
+- Manage application state using URL query parameters
+- Type-safe with Zod schema validation
+- Seamless integration with Next.js Router. **Support for other routers will come soon.**
+- Support for single and multiple query parameters
+- Customizable router push options
+  - Performs shallow routing by default but this is customizable for the entire store or just on a per-use basis.
+- Server-side rendering support
+  - Allows you to specify initial query values when the router itself is not ready.
+- Listens for URL updates outside of the hooks and makes sure its own stateis always up to date.
+- The library internally does shallow comparisons to prevent unnecessary re-renders.
+
 ## Usage
+
+`react-url-query-parameter-store` caters to a variety of use-cases.
+
+1. **State Persistence**: Store application state in the URL for easy sharing and bookmarking.
+2. **User Preferences**: Manage user settings like language, theme, or view options.
+3. **Navigation Control**: Handle pagination, sorting, and filtering in list views.
+4. **Form Management**: Preserve form state across page reloads or for multi-step processes.
+5. **Feature Toggles**: Implement A/B testing or feature flags using URL parameters.
+6. **Analytics and Tracking**: Capture user behavior or referral sources in the URL.
+7. **Dynamic Content Loading**: Control content display based on URL parameters.
+8. **Search Functionality**: Manage complex search queries and filters.
+9. **UI State Management**: Keep track of active tabs, expanded sections, or modal states.
+10. **Configuration Storage**: Store and retrieve user-specific configurations.
+11. **Table Filters**: Manage and persist complex filtering options for data tables.
+12. **URL Shortening**: Create compact URLs by encoding multiple parameters.
+13. **Cross-Component Communication**: Use URL parameters as a shared state between unrelated components.
+14. **Wizard Steps**: Track progress in multi-step processes or wizards.
+15. **Conditional Rendering**: Toggle visibility of components based on URL parameters.
 
 ```tsx
 import { z } from "zod";
 import { useRouter } from 'next/router';
-import { type SetRouterQueryParamsOptions, createUseQueryParam, createUseQueryParams } from './query-param-store'
+import { type SetRouterQueryParamsOptions, createUseQueryParam, createUseQueryParams } from 'react-url-query-parameter-store'
 
 const searchParamsSchema = z.object({
   search: z.string().optional(),
@@ -216,7 +162,7 @@ import { z } from "zod";
 import { useRouter } from 'next/router';
 import { NextPage, GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import { type ParsedUrlQuery } from 'querystring';
-import { type SetRouterQueryParamsOptions, createUseQueryParam, createUseQueryParams } from './query-param-store'
+import { type SetRouterQueryParamsOptions, createUseQueryParam, createUseQueryParams } from 'react-url-query-parameter-store'
 
 const searchParamsSchema = z.object({
   search: z.string().optional(),
