@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.1.1...v1.1.2) (2024-07-09)
+
+
+### Bug Fixes
+
+* 🐛 docs ([aea372f](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/aea372f28f12d68d973ea2f75286c84ad10faa18))
+
 ## [1.1.1](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.1.0...v1.1.1) (2024-07-08)
 
 
