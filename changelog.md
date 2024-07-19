@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.1.2...v1.2.0) (2024-07-19)
+
+
+### Features
+
+* ✨ add support for router.replace ([fab0412](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/fab0412bc9fef6ba4273135d78dbc74882a5789a))
+
 ## [1.1.2](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.1.1...v1.1.2) (2024-07-09)
 
 
