@@ -13,6 +13,7 @@ export interface SetRouterQueryParamsOptions {
   shallow?: boolean
   locale?: string
   scroll?: boolean
+  replace?: boolean
 }
 
 type SetQueryParamsFn<T> = (newParams: Partial<T>, options?: SetRouterQueryParamsOptions) => void
@@ -25,7 +26,7 @@ interface QueryParamStore<P> {
 
 const createQueryParamStore = <P extends z.ZodType>(
   schema: P,
-  routerPushOptions: SetRouterQueryParamsOptions = {},
+  routerOptions: SetRouterQueryParamsOptions = {},
 ): QueryParamStore<z.infer<P>> => {
   const subscribers = new Set<() => void>()
   let cachedSnapshot: z.infer<P> | null = null
@@ -80,7 +81,8 @@ const createQueryParamStore = <P extends z.ZodType>(
       const updatedParams = options.useExistingParams ? { ...currentParams, ...newParams } : newParams
       const parsedParams = schema.safeParse(updatedParams)
       if (parsedParams.success) {
-        Router.push(
+        const pushOrReplace = options.replace || routerOptions.replace ? Router.replace : Router.push
+        pushOrReplace(
           {
             pathname: Router.pathname,
             query: parsedParams.data as z.infer<P>,
@@ -88,10 +90,10 @@ const createQueryParamStore = <P extends z.ZodType>(
           undefined,
           pick(
             {
-              // Merge default options, global routerPushOptions, and per-call options
+              // Merge default options, global routerOptions, and per-call options
               // defaults
               shallow: true,
-              ...routerPushOptions,
+              ...routerOptions,
               ...options,
             },
             ['shallow', 'locale', 'scroll'],
@@ -129,7 +131,6 @@ const createUseQueryParamStore = <P extends z.ZodType>(queryParamStore: QueryPar
         lastParsedQueryRef.current = snapshot
         return snapshot as P
       },
-
       () => queryParamStore.getSnapshot(initialQuery), // Server snapshot
     )
 
@@ -157,9 +158,9 @@ const createUseQueryParamStore = <P extends z.ZodType>(queryParamStore: QueryPar
 
 export const createUseQueryParam = <P extends z.ZodType>(
   schema: P,
-  routerPushOptions: SetRouterQueryParamsOptions = {},
+  routerOptions: SetRouterQueryParamsOptions = {},
 ) => {
-  const queryParamStore = createQueryParamStore(schema, routerPushOptions)
+  const queryParamStore = createQueryParamStore(schema, routerOptions)
   const useQueryParamStore = createUseQueryParamStore(queryParamStore)
 
   return <K extends keyof z.infer<P>>(
@@ -168,16 +169,16 @@ export const createUseQueryParam = <P extends z.ZodType>(
   ): [z.infer<P>[K], (newValue: z.infer<P>[K], options?: SetRouterQueryParamsOptions) => void] => {
     const params = useQueryParamStore(initialQuery)
     const setValue = (newValue: z.infer<P>[K], options?: SetRouterQueryParamsOptions) =>
-      queryParamStore.setQueryParams({ [key]: newValue } as Partial<z.infer<P>>, { ...routerPushOptions, ...options })
+      queryParamStore.setQueryParams({ [key]: newValue } as Partial<z.infer<P>>, { ...routerOptions, ...options })
     return [params[key], setValue]
   }
 }
 
 export const createUseQueryParams = <P extends z.ZodType>(
   schema: P,
-  routerPushOptions: SetRouterQueryParamsOptions = {},
+  routerOptions: SetRouterQueryParamsOptions = {},
 ) => {
-  const queryParamStore = createQueryParamStore(schema, routerPushOptions)
+  const queryParamStore = createQueryParamStore(schema, routerOptions)
   const useQueryParamStore = createUseQueryParamStore(queryParamStore)
 
   return (initialQuery: ParsedUrlQuery = {}): [z.infer<P>, SetQueryParamsFn<z.infer<P>>] => {

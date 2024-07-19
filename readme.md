@@ -102,10 +102,10 @@ const searchParamsSchema = z.object({
  * - `scroll` is defaulted to `true` by the Router if not passed
  * - `useExistingParams` is defaulted to false - Merge with existing query params (not next router standard).
  */
-const routerPushOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true, useExistingParams: true };
+const routerOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true, useExistingParams: true };
 
-const useSearchQueryParam = createUseQueryParam(searchParams, routerPushOptions);
-const useSearchQueryParams = createUseQueryParams(searchParamsSchema, routerPushOptions);
+const useSearchQueryParam = createUseQueryParam(searchParams, routerOptions);
+const useSearchQueryParams = createUseQueryParams(searchParamsSchema, routerOptions);
 
 const initialQueryParams = {};
 
@@ -126,14 +126,14 @@ console.log(search, sortBy, searchParams);
  * - `scroll` is defaulted to `true` by the Router if not passed
  * - `useExistingParams` is defaulted to false - Merge with existing query params (not next router standard).
  */
-setSearch(VALUE, { ...routerPushOptions, ...ANYTHING THAT YOU MAY WANT TO OVERRIDE... });
+setSearch(VALUE, { ...routerOptions, ...ANYTHING THAT YOU MAY WANT TO OVERRIDE... });
 
 setSearchParams(
     {
         sortBy: ["name", "desc", Math.random().toString()],
     },
     {
-        ...routerPushOptions,
+        ...routerOptions,
         ...ANYTHING THAT YOU MAY WANT TO OVERRIDE...
     }
 );
@@ -175,10 +175,10 @@ const searchParamsSchema = z.object({
  * - `scroll` is defaulted to `true` by the Router if not passed
  * - `useExistingParams` is defaulted to false - Merge with existing query params (not next router standard).
  */
-const routerPushOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true, useExistingParams: true };
+const routerOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true, useExistingParams: true };
 
-const useSearchQueryParam = createUseQueryParam(searchParams, routerPushOptions);
-const useSearchQueryParams = createUseQueryParams(searchParamsSchema, routerPushOptions);
+const useSearchQueryParam = createUseQueryParam(searchParams, routerOptions);
+const useSearchQueryParams = createUseQueryParams(searchParamsSchema, routerOptions);
 
 const Home: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = ({ query }) => {
   const [search, setSearch] = useSearchQueryParam("search", initialQueryParams);
@@ -206,33 +206,34 @@ export default Home
 
 ## API Reference
 
-### `createUseQueryParam(schema, routerPushOptions?)`
-
-Creates a hook for managing a single query parameter.
-
-- `schema`: Zod schema for validating query parameters
-- `routerPushOptions`: (Optional) Default options for router.push
-
-Returns a hook that provides:
-- Current value of the parameter
-- Setter function for updating the parameter
-
-### `createUseQueryParams(schema, routerPushOptions?)`
-
-Creates a hook for managing multiple query parameters.
-
-- `schema`: Zod schema for validating query parameters
-- `routerPushOptions`: (Optional) Default options for router.push
-
-Returns a hook that provides:
-- Object containing all current query parameters
-- Setter function for updating multiple parameters
-
 ### SetRouterQueryParamsOptions
 
-Options for customizing router.push behavior:
+Options for customizing router.push/replace behavior:
 
 - `useExistingParams`: Merge with existing query params (default: false)
 - `shallow`: Perform shallow routing (default: true)
 - `locale`: Specify locale for internationalized routing
 - `scroll`: Control scrolling behavior (default: true)
+- `replace`: Replace the current history state instead of adding a new one (default: false).
+
+### `createUseQueryParam(schema, routerOptions?: SetRouterQueryParamsOptions)`
+
+Creates a hook for managing a single query parameter.
+
+- `schema`: Zod schema for validating query parameters
+- `routerOptions`: (Optional) Default options for router.push/router.replace
+
+Returns a hook that provides:
+- Current value of the parameter
+- Setter function for updating the parameter
+
+### `createUseQueryParams(schema, routerOptions?: SetRouterQueryParamsOptions)`
+
+Creates a hook for managing multiple query parameters.
+
+- `schema`: Zod schema for validating query parameters
+- `routerOptions`: (Optional) Default options for router.push/replace
+
+Returns a hook that provides:
+- Object containing all current query parameters
+- Setter function for updating multiple parameters
