@@ -42,7 +42,13 @@ const createStore = <P extends z.ZodType>(
       console.error('parseQuery.safeParse', parsedQuery.error)
     }
 
-    return schema.parse({}) as Partial<z.infer<P>>
+    // Use safeParse to avoid potential errors, and provide a default value that satisfies the schema
+    const defaultValue = schema.safeParse({})
+    if (defaultValue.success) {
+      return defaultValue.data as P
+    }
+
+    return {} as P
   }
 
   const store: QueryParamStore<z.infer<P>> = {
@@ -112,8 +118,11 @@ const createStore = <P extends z.ZodType>(
               console.error('createQueryParamStore.store.setQueryParams.routerPush', e)
             }
           })
-      } else if (options.logErrorsToConsole || routerOptions.logErrorsToConsole) {
-        console.error('createQueryParamStore.store.setQueryParams.newParamsDoNotMatchSchema', parsedParams.error)
+      } else {
+        // eslint-disable-next-line no-lonely-if
+        if (options.logErrorsToConsole ?? routerOptions.logErrorsToConsole) {
+          console.error('createQueryParamStore.store.setQueryParams.newParamsDoNotMatchSchema', parsedParams.error)
+        }
       }
     },
   }
@@ -121,11 +130,15 @@ const createStore = <P extends z.ZodType>(
   return store
 }
 
-const createUseQueryParamStore = <P extends z.ZodType>(queryParamStore: QueryParamStore<z.TypeOf<P>>) => {
+const createUseQueryParamStore = <P extends z.ZodType>(
+  queryParamStore: QueryParamStore<z.TypeOf<P>>,
+  routerOptions: SetRouterQueryParamsOptions = {},
+) => {
   return (initialQuery: ParsedUrlQuery = {}) => {
     const router = useRouter()
     const { isReady } = router
     const lastParsedQueryRef = useRef<z.infer<P> | null>(null)
+    const isFirstRender = useRef(true)
 
     const state = useSyncExternalStore(
       queryParamStore.subscribe,
@@ -138,6 +151,28 @@ const createUseQueryParamStore = <P extends z.ZodType>(queryParamStore: QueryPar
       },
       () => queryParamStore.getSnapshot(initialQuery), // Server snapshot
     )
+
+    useEffect(() => {
+      if (!isFirstRender.current) return
+      isFirstRender.current = false
+
+      if (isReady && !isEqual(state, router.query)) {
+        router
+          .replace(
+            {
+              pathname: router.pathname,
+              query: { ...router.query, ...state },
+            },
+            undefined,
+            { shallow: true },
+          )
+          .catch((e) => {
+            if (routerOptions.logErrorsToConsole) {
+              console.error('createQueryParamStore.store.setQueryParams.routerPush', e)
+            }
+          })
+      }
+    }, [isReady, state, router.query, router.pathname])
 
     useEffect(() => {
       const handleRouteChange = () => {
@@ -166,7 +201,7 @@ export const createQueryParamStore = <P extends z.ZodType>(
   routerOptions: SetRouterQueryParamsOptions = {},
 ) => {
   const store = createStore(schema, routerOptions)
-  const useQueryParamStore = createUseQueryParamStore(store)
+  const useQueryParamStore = createUseQueryParamStore(store, routerOptions)
 
   const useQueryParam = <K extends keyof z.infer<P>>(
     key: K,
