@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.3.0...v1.3.1) (2024-07-20)
+
+
+### Bug Fixes
+
+* 🐛 dynamic query parameters ([4df98f9](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/4df98f9073a827006877dd843dde4e3eb7260f30))
+
 # [1.3.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.2.0...v1.3.0) (2024-07-20)
 
 
