@@ -1,3 +1,11 @@
+# [1.3.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.2.0...v1.3.0) (2024-07-20)
+
+
+### Features
+
+* ✨ better way to use + 1 store to power both useQueryParam and useQueryParams ([5b9c711](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/5b9c71172cfc10fd7b78e3b6d06b1b587abfc9c8))
+* ✨ if a default value is specified in zod schema, shallow redirect user ([77f7253](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/77f7253ff1813de7b2d4d850b3d585bfc74469e2))
+
 # [1.2.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.1.2...v1.2.0) (2024-07-19)
 
 
