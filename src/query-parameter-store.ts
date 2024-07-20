@@ -91,10 +91,27 @@ const createStore = <P extends z.ZodType>(
       if (parsedParams.success) {
         const pushOrReplace = options.replace || routerOptions.replace ? Router.replace : Router.push
 
+        // Extract dynamic route parameters
+        const dynamicParams = Object.keys(Router.query).reduce(
+          (acc, key) => {
+            if (Router.pathname.includes(`[${key}]`) || Router.pathname.includes(`[...${key}]`)) {
+              acc[key] = Router.query[key]
+            }
+            return acc
+          },
+          {} as Record<string, string | string[] | undefined>,
+        )
+
+        // Merge dynamic params with new params, prioritizing dynamic params
+        const mergedParams = {
+          ...parsedParams.data,
+          ...dynamicParams,
+        } as z.infer<P>
+
         pushOrReplace(
           {
             pathname: Router.pathname,
-            query: parsedParams.data as z.infer<P>,
+            query: mergedParams,
           },
           undefined,
           pick(
