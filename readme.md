@@ -89,7 +89,7 @@ It requires you to have the following packages pre-installed at minimum in your 
 ```tsx
 import { z } from "zod";
 import { useRouter } from 'next/router';
-import { type SetRouterQueryParamsOptions, createUseQueryParam, createUseQueryParams } from 'react-url-query-parameter-store'
+import { type SetRouterQueryParamsOptions, createQueryParamStore } from 'react-url-query-parameter-store'
 
 const searchParamsSchema = z.object({
   search: z.string().optional(),
@@ -104,15 +104,14 @@ const searchParamsSchema = z.object({
  */
 const routerOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true, useExistingParams: true };
 
-const useSearchQueryParam = createUseQueryParam(searchParams, routerOptions);
-const useSearchQueryParams = createUseQueryParams(searchParamsSchema, routerOptions);
+const { useQueryParam, useQueryParams } = createQueryParamStore(searchParamsSchema, routerOptions);
 
 const initialQueryParams = {};
 
-const [search, setSearch] = useSearchQueryParam("search", initialQueryParams);
-const [sortBy, setSortBy] = useSearchQueryParam("sortBy", initialQueryParams);
+const [search, setSearch] = useQueryParam("search", initialQueryParams);
+const [sortBy, setSortBy] = useQueryParam("sortBy", initialQueryParams);
 
-const [searchParams, setSearchParams] = useSearchQueryParams(initialQueryParams);
+const [searchParams, setSearchParams] = useQueryParams(initialQueryParams);
 
 console.log(search, sortBy, searchParams);
 
@@ -162,7 +161,7 @@ import { z } from "zod";
 import { useRouter } from 'next/router';
 import { NextPage, GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import { type ParsedUrlQuery } from 'querystring';
-import { type SetRouterQueryParamsOptions, createUseQueryParam, createUseQueryParams } from 'react-url-query-parameter-store'
+import { type SetRouterQueryParamsOptions, createQueryParamStore } from 'react-url-query-parameter-store'
 
 const searchParamsSchema = z.object({
   search: z.string().optional(),
@@ -177,14 +176,13 @@ const searchParamsSchema = z.object({
  */
 const routerOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true, useExistingParams: true };
 
-const useSearchQueryParam = createUseQueryParam(searchParams, routerOptions);
-const useSearchQueryParams = createUseQueryParams(searchParamsSchema, routerOptions);
+const { useQueryParam, useQueryParams } = createQueryParamStore(searchParamsSchema, routerOptions);
 
 const Home: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = ({ query }) => {
-  const [search, setSearch] = useSearchQueryParam("search", initialQueryParams);
-  const [sortBy, setSortBy] = useSearchQueryParam("sortBy", initialQueryParams);
+  const [search, setSearch] = useQueryParam("search", initialQueryParams);
+  const [sortBy, setSortBy] = useQueryParam("sortBy", initialQueryParams);
 
-  const [searchParams, setSearchParams] = useSearchQueryParams(initialQueryParams);
+  const [searchParams, setSearchParams] = useQueryParams(initialQueryParams);
 
   console.log(search, sortBy, searchParams);
 
@@ -216,24 +214,34 @@ Options for customizing router.push/replace behavior:
 - `scroll`: Control scrolling behavior (default: true)
 - `replace`: Replace the current history state instead of adding a new one (default: false).
 
-### `createUseQueryParam(schema, routerOptions?: SetRouterQueryParamsOptions)`
+### `createQueryParamStore(schema, routerOptions?: SetRouterQueryParamsOptions)`
 
-Creates a hook for managing a single query parameter.
+Creates hooks for managing query parameters.
 
 - `schema`: Zod schema for validating query parameters
 - `routerOptions`: (Optional) Default options for router.push/router.replace
 
-Returns a hook that provides:
+Returns an object with two hooks:
+- `useQueryParam`: Hook for managing a single query parameter
+- `useQueryParams`: Hook for managing multiple query parameters
+
+#### `useQueryParam(key, initialQuery?: ParsedUrlQuery)`
+
+Hook for managing a single query parameter.
+
+- `key`: The key of the query parameter to manage
+- `initialQuery`: (Optional) Initial query values, useful for server-side rendering
+
+Returns:
 - Current value of the parameter
 - Setter function for updating the parameter
 
-### `createUseQueryParams(schema, routerOptions?: SetRouterQueryParamsOptions)`
+#### `useQueryParams(initialQuery?: ParsedUrlQuery)`
 
-Creates a hook for managing multiple query parameters.
+Hook for managing multiple query parameters.
 
-- `schema`: Zod schema for validating query parameters
-- `routerOptions`: (Optional) Default options for router.push/replace
+- `initialQuery`: (Optional) Initial query values, useful for server-side rendering
 
-Returns a hook that provides:
+Returns:
 - Object containing all current query parameters
 - Setter function for updating multiple parameters

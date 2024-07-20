@@ -2,9 +2,7 @@ import type { ParsedUrlQuery } from 'querystring'
 
 import isEqual from 'lodash/isEqual'
 import pick from 'lodash/pick'
-// eslint-disable-next-line import/no-extraneous-dependencies
 import Router, { useRouter } from 'next/router'
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { useEffect, useRef, useSyncExternalStore } from 'react'
 import type { z } from 'zod'
 
@@ -14,6 +12,7 @@ export interface SetRouterQueryParamsOptions {
   locale?: string
   scroll?: boolean
   replace?: boolean
+  logErrorsToConsole?: boolean
 }
 
 type SetQueryParamsFn<T> = (newParams: Partial<T>, options?: SetRouterQueryParamsOptions) => void
@@ -24,7 +23,7 @@ interface QueryParamStore<P> {
   setQueryParams: SetQueryParamsFn<P>
 }
 
-const createQueryParamStore = <P extends z.ZodType>(
+const createStore = <P extends z.ZodType>(
   schema: P,
   routerOptions: SetRouterQueryParamsOptions = {},
 ): QueryParamStore<z.infer<P>> => {
@@ -38,9 +37,11 @@ const createQueryParamStore = <P extends z.ZodType>(
     if (parsedQuery.success) {
       return parsedQuery.data as P
     }
-
     // If parsing fails, log the error and return an empty object that matches the schema
-    console.error('parseQuery.safeParse', parsedQuery.error)
+    if (routerOptions.logErrorsToConsole) {
+      console.error('parseQuery.safeParse', parsedQuery.error)
+    }
+
     return schema.parse({}) as Partial<z.infer<P>>
   }
 
@@ -71,7 +72,7 @@ const createQueryParamStore = <P extends z.ZodType>(
     },
     // Set new query params
     setQueryParams: (newParams: Partial<z.infer<P>>, options: SetRouterQueryParamsOptions = {}) => {
-      if (typeof window === 'undefined') {
+      if (typeof window === 'undefined' && (options.logErrorsToConsole || routerOptions.logErrorsToConsole)) {
         console.warn('createQueryParamStore.store.setQueryParams.serverSideUsageError')
         return
       }
@@ -79,9 +80,11 @@ const createQueryParamStore = <P extends z.ZodType>(
       const currentParams = Router.query
 
       const updatedParams = options.useExistingParams ? { ...currentParams, ...newParams } : newParams
+
       const parsedParams = schema.safeParse(updatedParams)
       if (parsedParams.success) {
         const pushOrReplace = options.replace || routerOptions.replace ? Router.replace : Router.push
+
         pushOrReplace(
           {
             pathname: Router.pathname,
@@ -105,9 +108,11 @@ const createQueryParamStore = <P extends z.ZodType>(
             subscribers.forEach((callback) => callback())
           })
           .catch((e) => {
-            console.error('createQueryParamStore.store.setQueryParams.routerPush', e)
+            if (options.logErrorsToConsole || routerOptions.logErrorsToConsole) {
+              console.error('createQueryParamStore.store.setQueryParams.routerPush', e)
+            }
           })
-      } else {
+      } else if (options.logErrorsToConsole || routerOptions.logErrorsToConsole) {
         console.error('createQueryParamStore.store.setQueryParams.newParamsDoNotMatchSchema', parsedParams.error)
       }
     },
@@ -156,33 +161,31 @@ const createUseQueryParamStore = <P extends z.ZodType>(queryParamStore: QueryPar
   }
 }
 
-export const createUseQueryParam = <P extends z.ZodType>(
+export const createQueryParamStore = <P extends z.ZodType>(
   schema: P,
   routerOptions: SetRouterQueryParamsOptions = {},
 ) => {
-  const queryParamStore = createQueryParamStore(schema, routerOptions)
-  const useQueryParamStore = createUseQueryParamStore(queryParamStore)
+  const store = createStore(schema, routerOptions)
+  const useQueryParamStore = createUseQueryParamStore(store)
 
-  return <K extends keyof z.infer<P>>(
+  const useQueryParam = <K extends keyof z.infer<P>>(
     key: K,
     initialQuery: ParsedUrlQuery = {},
   ): [z.infer<P>[K], (newValue: z.infer<P>[K], options?: SetRouterQueryParamsOptions) => void] => {
     const params = useQueryParamStore(initialQuery)
     const setValue = (newValue: z.infer<P>[K], options?: SetRouterQueryParamsOptions) =>
-      queryParamStore.setQueryParams({ [key]: newValue } as Partial<z.infer<P>>, { ...routerOptions, ...options })
+      store.setQueryParams({ [key]: newValue } as Partial<z.infer<P>>, {
+        ...routerOptions,
+        ...options,
+      })
+
     return [params[key], setValue]
   }
-}
 
-export const createUseQueryParams = <P extends z.ZodType>(
-  schema: P,
-  routerOptions: SetRouterQueryParamsOptions = {},
-) => {
-  const queryParamStore = createQueryParamStore(schema, routerOptions)
-  const useQueryParamStore = createUseQueryParamStore(queryParamStore)
-
-  return (initialQuery: ParsedUrlQuery = {}): [z.infer<P>, SetQueryParamsFn<z.infer<P>>] => {
+  const useQueryParams = (initialQuery: ParsedUrlQuery = {}): [z.infer<P>, SetQueryParamsFn<z.infer<P>>] => {
     const params = useQueryParamStore(initialQuery)
-    return [params, queryParamStore.setQueryParams]
+    return [params, store.setQueryParams]
   }
+
+  return { useQueryParam, useQueryParams }
 }
