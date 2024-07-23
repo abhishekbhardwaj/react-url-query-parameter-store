@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.3.1...v1.4.0) (2024-07-23)
+
+
+### Features
+
+* ✨ allow for pathname changes when updating query param ([cca7779](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/cca7779f20aa2e55a85c825c14186953dc3df251))
+
 ## [1.3.1](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.3.0...v1.3.1) (2024-07-20)
 
 
