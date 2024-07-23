@@ -214,6 +214,14 @@ Options for customizing router.push/replace behavior:
 - `scroll`: Control scrolling behavior (default: true)
 - `replace`: Replace the current history state instead of adding a new one (default: false).
 
+### SetQueryParamOptions
+
+Everything in `SetRouterQueryParamsOptions` along with:
+
+- `pathname`: string - Specify the pathname for the URL. Query parameters are added automatically.
+
+This type extends `SetRouterQueryParamsOptions` to provide more granular control over URL updates. It allows you to change the pathname while updating query parameters, which can be useful for navigating between different pages or routes while maintaining specific query parameter states.
+
 ### `createQueryParamStore(schema, routerOptions?: SetRouterQueryParamsOptions)`
 
 Creates hooks for managing query parameters.
@@ -234,7 +242,7 @@ Hook for managing a single query parameter.
 
 Returns:
 - Current value of the parameter
-- Setter function for updating the parameter
+- Setter function for updating the parameter (accepts `SetQueryParamOptions`)
 
 #### `useQueryParams(initialQuery?: ParsedUrlQuery)`
 
@@ -244,4 +252,4 @@ Hook for managing multiple query parameters.
 
 Returns:
 - Object containing all current query parameters
-- Setter function for updating multiple parameters
+- Setter function for updating multiple parameters (accepts `SetQueryParamOptions`)

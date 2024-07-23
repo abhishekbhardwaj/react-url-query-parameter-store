@@ -15,7 +15,11 @@ export interface SetRouterQueryParamsOptions {
   logErrorsToConsole?: boolean
 }
 
-type SetQueryParamsFn<T> = (newParams: Partial<T>, options?: SetRouterQueryParamsOptions) => void
+export type SetQueryParamOptions = SetRouterQueryParamsOptions & {
+  pathname?: string
+}
+
+type SetQueryParamsFn<T> = (newParams: Partial<T>, options?: SetQueryParamOptions) => void
 
 interface QueryParamStore<P> {
   getSnapshot: (initialQuery?: ParsedUrlQuery) => P
@@ -77,7 +81,7 @@ const createStore = <P extends z.ZodType>(
       return () => subscribers.delete(callback)
     },
     // Set new query params
-    setQueryParams: (newParams: Partial<z.infer<P>>, options: SetRouterQueryParamsOptions = {}) => {
+    setQueryParams: (newParams: Partial<z.infer<P>>, options: SetQueryParamOptions = {}) => {
       if (typeof window === 'undefined' && (options.logErrorsToConsole || routerOptions.logErrorsToConsole)) {
         console.warn('createQueryParamStore.store.setQueryParams.serverSideUsageError')
         return
@@ -110,7 +114,7 @@ const createStore = <P extends z.ZodType>(
 
         pushOrReplace(
           {
-            pathname: Router.pathname,
+            pathname: options.pathname || Router.pathname,
             query: mergedParams,
           },
           undefined,
@@ -223,9 +227,9 @@ export const createQueryParamStore = <P extends z.ZodType>(
   const useQueryParam = <K extends keyof z.infer<P>>(
     key: K,
     initialQuery: ParsedUrlQuery = {},
-  ): [z.infer<P>[K], (newValue: z.infer<P>[K], options?: SetRouterQueryParamsOptions) => void] => {
+  ): [z.infer<P>[K], (newValue: z.infer<P>[K], options?: SetQueryParamOptions) => void] => {
     const params = useQueryParamStore(initialQuery)
-    const setValue = (newValue: z.infer<P>[K], options?: SetRouterQueryParamsOptions) =>
+    const setValue = (newValue: z.infer<P>[K], options?: SetQueryParamOptions) =>
       store.setQueryParams({ [key]: newValue } as Partial<z.infer<P>>, {
         ...routerOptions,
         ...options,
