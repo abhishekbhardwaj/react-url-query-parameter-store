@@ -3,7 +3,7 @@ import type { ParsedUrlQuery } from 'querystring'
 import isEqual from 'lodash/isEqual'
 import pick from 'lodash/pick'
 import Router, { useRouter } from 'next/router'
-import { useEffect, useRef, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
 import type { z } from 'zod'
 
 export interface SetRouterQueryParamsOptions {
@@ -159,25 +159,42 @@ const createUseQueryParamStore = <P extends z.ZodType>(
     const router = useRouter()
     const { isReady } = router
     const lastParsedQueryRef = useRef<z.infer<P> | null>(null)
-    const isFirstRender = useRef(true)
+    const isInitializedRef = useRef(false)
 
     const state = useSyncExternalStore(
       queryParamStore.subscribe,
-      () => {
+      useCallback(() => {
         // Use the appropriate snapshot based on whether the router is ready
         const snapshot = isReady ? queryParamStore.getSnapshot() : queryParamStore.getSnapshot(initialQuery)
 
         lastParsedQueryRef.current = snapshot
         return snapshot as P
-      },
+      }, [isReady, initialQuery]),
       () => queryParamStore.getSnapshot(initialQuery), // Server snapshot
     )
 
     useEffect(() => {
-      if (!isFirstRender.current) return
-      isFirstRender.current = false
+      if (!isReady) return
 
-      if (isReady && !isEqual(state, router.query)) {
+      const parsedRouterQuery = queryParamStore.getSnapshot(router.query)
+      const isStateEqualToRouterQuery = isEqual(state, parsedRouterQuery)
+
+      // Skip the initial update if the state is already equal to the router query
+      if (!isInitializedRef.current) {
+        isInitializedRef.current = true
+
+        if (!isStateEqualToRouterQuery) {
+          // Update state to match parsed router query on first render
+          const mergedState = { ...state, ...parsedRouterQuery }
+          queryParamStore.setQueryParams(mergedState, { replace: true, shallow: true })
+        }
+
+        lastParsedQueryRef.current = parsedRouterQuery
+        return
+      }
+
+      // Update the router query if the state has changed
+      if (!isStateEqualToRouterQuery) {
         router
           .replace(
             {
@@ -189,9 +206,10 @@ const createUseQueryParamStore = <P extends z.ZodType>(
           )
           .catch((e) => {
             if (routerOptions.logErrorsToConsole) {
-              console.error('createQueryParamStore.store.setQueryParams.routerPush', e)
+              console.error('createUseQueryParamStore.routerReplace', e)
             }
           })
+        lastParsedQueryRef.current = state
       }
     }, [isReady, state, router.query, router.pathname])
 
