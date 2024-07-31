@@ -1,3 +1,16 @@
+# [1.5.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.4.0...v1.5.0) (2024-07-31)
+
+
+### Bug Fixes
+
+* 🐛 more flexible routing - account for query params not part of the zod schema ([0bfdac5](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/0bfdac5fd3656938acf23c5d63204329f9ab97b4))
+* 🐛 redirect bug when we aren't tracking all query parameters; ([31867aa](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/31867aa4e7dc167771571ab39bfe55e1d567ac13))
+
+
+### Features
+
+* ✨ retain all query parameters on page transition ([efa463a](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/efa463a71f46bf3c39449e9f5c1dea6d5727c5cd))
+
 # [1.4.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.3.1...v1.4.0) (2024-07-23)
 
 
