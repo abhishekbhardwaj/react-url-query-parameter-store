@@ -94,10 +94,42 @@ const createStore = <P extends z.ZodType>(
       if (parsedParams.success) {
         const pushOrReplace = options.replace || routerOptions.replace ? Router.replace : Router.push
 
+        // Extract dynamic route parameters
+        const dynamicParams = Object.keys(Router.query).reduce(
+          (acc, key) => {
+            if (Router.pathname.includes(`[${key}]`) || Router.pathname.includes(`[...${key}]`)) {
+              acc[key] = Router.query[key]
+            }
+            return acc
+          },
+          {} as Record<string, string | string[] | undefined>,
+        )
+
+        // Get existing query params that are not dynamic or parsed
+        const existingParams = Object.keys(Router.query).reduce(
+          (acc, key) => {
+            if (
+              !Object.prototype.hasOwnProperty.call(dynamicParams, key) &&
+              !Object.prototype.hasOwnProperty.call(parsedParams.data, key)
+            ) {
+              acc[key] = Router.query[key]
+            }
+            return acc
+          },
+          {} as Record<string, string | string[] | undefined>,
+        )
+
+        // Merge dynamic params with new params, prioritizing dynamic params
+        const mergedParams = {
+          ...existingParams,
+          ...parsedParams.data,
+          ...dynamicParams,
+        } as z.infer<P>
+
         pushOrReplace(
           {
             pathname: options.pathname || Router.pathname,
-            query: updatedParams,
+            query: mergedParams,
           },
           undefined,
           pick(
@@ -161,13 +193,17 @@ const createUseQueryParamStore = <P extends z.ZodType>(
       const parsedRouterQuery = queryParamStore.getSnapshot(router.query)
       const isStateEqualToRouterQuery = isEqual(state, parsedRouterQuery)
 
+      // Compare only the keys present in the state
+      const relevantRouterQuery = pick(router.query, Object.keys(state))
+      const isRelevantQueryEqual = isEqual(relevantRouterQuery, state)
+
       // Skip the initial update if the state is already equal to the router query
       if (!isInitializedRef.current) {
         isInitializedRef.current = true
 
-        if (!isStateEqualToRouterQuery) {
+        if (!isStateEqualToRouterQuery || !isRelevantQueryEqual) {
           // Update state to match parsed router query on first render
-          const mergedState = { ...state, ...parsedRouterQuery }
+          const mergedState = { ...router.query, ...state, ...parsedRouterQuery }
           queryParamStore.setQueryParams(mergedState, { replace: true, shallow: true })
         }
 
@@ -176,21 +212,15 @@ const createUseQueryParamStore = <P extends z.ZodType>(
       }
 
       // Update the router query if the state has changed
-      if (!isStateEqualToRouterQuery) {
-        router
-          .replace(
-            {
-              pathname: router.pathname,
-              query: { ...router.query, ...state },
-            },
-            undefined,
-            { shallow: true },
-          )
-          .catch((e) => {
-            if (routerOptions.logErrorsToConsole) {
-              console.error('createUseQueryParamStore.routerReplace', e)
-            }
-          })
+      if (!isStateEqualToRouterQuery || !isRelevantQueryEqual) {
+        const { pathname } = router
+        const query = { ...router.query, ...state }
+
+        router.push({ pathname, query }, undefined, { shallow: true }).catch((e) => {
+          if (routerOptions.logErrorsToConsole) {
+            console.error('createUseQueryParamStore.routerReplace', e)
+          }
+        })
         lastParsedQueryRef.current = state
       }
     }, [isReady, state, router.query, router.pathname])
