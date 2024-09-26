@@ -100,9 +100,8 @@ const searchParamsSchema = z.object({
  * - if `shallow` is not passed, it's `true`. Shallow routing by default.
  * - `locale`: no default value
  * - `scroll` is defaulted to `true` by the Router if not passed
- * - `useExistingParams` is defaulted to false - Merge with existing query params (not next router standard).
  */
-const routerOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true, useExistingParams: true };
+const routerOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true };
 
 const { useQueryParam, useQueryParams } = createQueryParamStore(searchParamsSchema, routerOptions);
 
@@ -123,7 +122,6 @@ console.log(search, sortBy, searchParams);
  * - if `shallow` is not passed, it's `true`.
  * - `locale`: no default value
  * - `scroll` is defaulted to `true` by the Router if not passed
- * - `useExistingParams` is defaulted to false - Merge with existing query params (not next router standard).
  */
 setSearch(VALUE, { ...routerOptions, ...ANYTHING THAT YOU MAY WANT TO OVERRIDE... });
 
@@ -172,9 +170,8 @@ const searchParamsSchema = z.object({
  * - if `shallow` is not passed, it's `true`. Shallow routing by default.
  * - `locale`: no default value
  * - `scroll` is defaulted to `true` by the Router if not passed
- * - `useExistingParams` is defaulted to false - Merge with existing query params (not next router standard).
  */
-const routerOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true, useExistingParams: true };
+const routerOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true };
 
 const { useQueryParam, useQueryParams } = createQueryParamStore(searchParamsSchema, routerOptions);
 
@@ -208,7 +205,6 @@ export default Home
 
 Options for customizing router.push/replace behavior:
 
-- `useExistingParams`: Merge with existing query params (default: false)
 - `shallow`: Perform shallow routing (default: true)
 - `locale`: Specify locale for internationalized routing
 - `scroll`: Control scrolling behavior (default: true)

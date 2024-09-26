@@ -8,7 +8,6 @@ import { useEffect, useRef, useSyncExternalStore } from 'react'
 import type { z } from 'zod'
 
 export interface SetRouterQueryParamsOptions {
-  useExistingParams?: boolean
   shallow?: boolean
   locale?: string
   scroll?: boolean
@@ -98,10 +97,7 @@ const createStore = <P extends z.ZodType>(
         return
       }
 
-      const currentParams = Router.query
-      const updatedParams = options.useExistingParams ? { ...currentParams, ...newParams } : newParams
-
-      const parsedParams = schema.safeParse(updatedParams)
+      const parsedParams = schema.safeParse(newParams)
       if (parsedParams.success) {
         const pushOrReplace = options.replace || routerOptions.replace ? Router.replace : Router.push
 
