@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.5.0...v1.6.0) (2024-09-26)
+
+
+### Features
+
+* ✨ add tests, enhance performance, add support for initial query parameters to the use* hooks, remove useExistingParams (not needed) ([#2](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/issues/2)) ([9ef5474](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/9ef54741130bec7d7c0d99f49f49c1786933067e))
+
 # [1.5.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.4.0...v1.5.0) (2024-07-31)
 
 
