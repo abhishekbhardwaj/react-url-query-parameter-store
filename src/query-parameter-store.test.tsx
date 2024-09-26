@@ -19,8 +19,6 @@ const schema = z.object({
 })
 
 describe('createQueryParamStore', () => {
-  const { useQueryParam, useQueryParams } = createQueryParamStore(schema)
-
   beforeEach(() => {
     mockRouter.setCurrentUrl('/')
   })
@@ -30,6 +28,7 @@ describe('createQueryParamStore', () => {
   })
 
   it('gets and sets a single parameter', () => {
+    const { useQueryParam } = createQueryParamStore(schema)
     const { result } = renderHook(() => useQueryParam('search'), {
       wrapper: MemoryRouterProvider,
     })
@@ -45,6 +44,7 @@ describe('createQueryParamStore', () => {
   })
 
   it('gets and sets multiple parameters', async () => {
+    const { useQueryParams } = createQueryParamStore(schema)
     const { result } = renderHook(() => useQueryParams(), {
       wrapper: MemoryRouterProvider,
     })
@@ -60,6 +60,7 @@ describe('createQueryParamStore', () => {
   })
 
   it('validates parameters against the schema', () => {
+    const { useQueryParams } = createQueryParamStore(schema)
     const { result } = renderHook(() => useQueryParams(), {
       wrapper: MemoryRouterProvider,
     })
@@ -73,6 +74,7 @@ describe('createQueryParamStore', () => {
   })
 
   it('handles array parameters correctly', () => {
+    const { useQueryParam } = createQueryParamStore(schema)
     const { result } = renderHook(() => useQueryParam('filters'), {
       wrapper: MemoryRouterProvider,
     })
@@ -86,6 +88,7 @@ describe('createQueryParamStore', () => {
   })
 
   it('uses initial query on server-side', () => {
+    const { useQueryParams } = createQueryParamStore(schema)
     const initialQuery = { search: 'initial' }
     const { result } = renderHook(() => useQueryParams(initialQuery), {
       wrapper: MemoryRouterProvider,
@@ -95,6 +98,7 @@ describe('createQueryParamStore', () => {
   })
 
   it('handles shallow routing', () => {
+    const { useQueryParam } = createQueryParamStore(schema)
     vi.spyOn(mockRouter, 'push')
     const { result } = renderHook(() => useQueryParam('search'), {
       wrapper: MemoryRouterProvider,
@@ -112,6 +116,7 @@ describe('createQueryParamStore', () => {
   })
 
   it('handles replace option', () => {
+    const { useQueryParam } = createQueryParamStore(schema)
     vi.spyOn(mockRouter, 'replace')
     const { result } = renderHook(() => useQueryParam('search'), {
       wrapper: MemoryRouterProvider,
@@ -125,6 +130,7 @@ describe('createQueryParamStore', () => {
   })
 
   it('preserves existing query parameters', async () => {
+    const { useQueryParams } = createQueryParamStore(schema)
     // Set up initial query with an extra parameter
     await mockRouter.push({ pathname: '/', query: { existingParam: 'value' } })
 
@@ -143,6 +149,7 @@ describe('createQueryParamStore', () => {
   })
 
   it('preserves dynamic route parameters', async () => {
+    const { useQueryParams } = createQueryParamStore(schema)
     await mockRouter.push('/posts/123')
 
     expect(mockRouter).toMatchObject({
@@ -165,6 +172,7 @@ describe('createQueryParamStore', () => {
   })
 
   it('updates state on external route changes', async () => {
+    const { useQueryParams } = createQueryParamStore(schema)
     const { result } = renderHook(() => useQueryParams(), {
       wrapper: MemoryRouterProvider,
     })
@@ -179,6 +187,7 @@ describe('createQueryParamStore', () => {
   })
 
   it('minimizes unnecessary re-renders', async () => {
+    const { useQueryParams } = createQueryParamStore(schema)
     const renderSpy = vi.fn()
     const { result } = renderHook(
       () => {
@@ -212,9 +221,99 @@ describe('createQueryParamStore', () => {
     // 5. After the router update (even though the value didn't change)
     expect(renderSpy).toHaveBeenCalledTimes(5)
   })
-})
 
-describe('custom router options', () => {
+  it('handles errors when logErrorsToConsole is true', () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const { useQueryParams } = createQueryParamStore(schema, { logErrorsToConsole: true })
+
+    const { result } = renderHook(() => useQueryParams(), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    act(() => {
+      result.current[1]({ search: false } as any)
+    })
+
+    expect(consoleErrorSpy).toHaveBeenCalled()
+    consoleErrorSpy.mockRestore()
+  })
+
+  it('handles complex schemas', () => {
+    const complexSchema = z.object({
+      nested: z.object({
+        value: z.number(),
+      }),
+      arrayParam: z.array(z.string()),
+      optionalParam: z.string().optional(),
+    })
+
+    const { useQueryParams } = createQueryParamStore(complexSchema)
+
+    const { result } = renderHook(() => useQueryParams(), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    act(() => {
+      result.current[1]({
+        nested: { value: 42 },
+        arrayParam: ['a', 'b'],
+        optionalParam: 'test',
+      })
+    })
+
+    expect(result.current[0]).toEqual({
+      nested: { value: 42 },
+      arrayParam: ['a', 'b'],
+      optionalParam: 'test',
+    })
+  })
+
+  it('works with catch-all routes', async () => {
+    await mockRouter.push('/catch/all/route')
+
+    const { useQueryParams } = createQueryParamStore(schema)
+
+    const { result } = renderHook(() => useQueryParams(), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    act(() => {
+      result.current[1]({ search: 'test' })
+    })
+
+    expect(mockRouter.query).toEqual(
+      expect.objectContaining({
+        catchAll: ['catch', 'all', 'route'],
+        search: 'test',
+      }),
+    )
+  })
+
+  it('handles invalid initial queries', () => {
+    const invalidInitialQuery = { invalidParam: 'value' }
+    const { useQueryParams } = createQueryParamStore(schema)
+
+    const { result } = renderHook(() => useQueryParams(invalidInitialQuery as any), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    expect(result.current[0]).toEqual({})
+  })
+
+  it('correctly infers and updates single param with useQueryParam', () => {
+    const { useQueryParam } = createQueryParamStore(schema)
+
+    const { result } = renderHook(() => useQueryParam('page'), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    act(() => {
+      result.current[1](5)
+    })
+
+    expect(result.current[0]).toBe(5)
+  })
+
   it('applies custom router options', () => {
     const customOptions = { locale: 'en-US', scroll: false }
     const { useQueryParam } = createQueryParamStore(schema, customOptions)
