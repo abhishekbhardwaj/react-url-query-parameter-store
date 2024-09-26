@@ -6,8 +6,6 @@
 [![License](https://badgen.net/npm/license/react-url-query-parameter-store)](https://www.npmjs.com/package/react-url-query-parameter-store)
 [![Bundle Size (Minified and Zipped)](https://img.shields.io/bundlephobia/minzip/react-url-query-parameter-store)](https://bundlephobia.com/package/react-url-query-parameter-store)
 
-An Efficient Query Parameter Management Tool for React
-
 `react-url-query-parameter-store` is an efficient query parameter management tool for React. It provides a robust solution for managing URL query parameters in React applications, with a focus on type-safety and efficiency.
 
 While it's not a traditional state management store, it offers powerful capabilities for handling query string validation and synchronization across your app.
