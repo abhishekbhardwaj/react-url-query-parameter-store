@@ -1,13 +1,16 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import mockRouter from 'next-router-mock'
+import { createDynamicRouteParser } from 'next-router-mock/dynamic-routes'
 import { MemoryRouterProvider } from 'next-router-mock/MemoryRouterProvider'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 
 import { createQueryParamStore } from './query-parameter-store'
 
-// Mock next/router
+// eslint-disable-next-line global-require
 vi.mock('next/router', () => require('next-router-mock'))
+
+mockRouter.useParser(createDynamicRouteParser(['/posts/[id]', '/[dynamic]/path', '/[...catchAll]']))
 
 describe('react-url-query-parameter-store', () => {
   const schema = z.object({
@@ -32,15 +35,17 @@ describe('react-url-query-parameter-store', () => {
         wrapper: MemoryRouterProvider,
       })
 
+      const given = 'test query'
+
       act(() => {
-        result.current[1]('test query')
+        result.current[1](given)
       })
 
-      expect(result.current[0]).toBe('test query')
-      expect(mockRouter.query.search).toBe('test query')
+      expect(result.current[0]).toBe(given)
+      expect(mockRouter.query.search).toBe(given)
     })
 
-    it.skip('should get and set multiple parameters', async () => {
+    it('should get and set multiple parameters', async () => {
       const { result } = renderHook(() => useQueryParams(), {
         wrapper: MemoryRouterProvider,
       })
@@ -51,7 +56,7 @@ describe('react-url-query-parameter-store', () => {
 
       await waitFor(() => {
         expect(result.current[0]).toEqual({ search: 'test', page: 2 })
-        expect(mockRouter.query).toEqual({ search: 'test', page: '2' })
+        expect(mockRouter.query).toEqual({ search: 'test', page: 2 })
       })
     })
   })
@@ -125,40 +130,47 @@ describe('react-url-query-parameter-store', () => {
 
       expect(mockRouter.replace).toHaveBeenCalled()
     })
-  })
 
-  describe('Dynamic route parameters', () => {
-    it.skip('should preserve dynamic route parameters', async () => {
-      mockRouter.push('/posts/[id]', '/posts/123')
-
-      console.log('Initial router query:', mockRouter.query)
+    it('should preserve existing query parameters', async () => {
+      // Set up initial query with an extra parameter
+      await mockRouter.push({ pathname: '/', query: { existingParam: 'value' } })
 
       const { result } = renderHook(() => useQueryParams(), {
         wrapper: MemoryRouterProvider,
       })
 
-      console.log('Initial hook result:', result.current[0])
+      act(() => {
+        result.current[1]({ search: 'test' })
+      })
+
+      await waitFor(() => {
+        expect(mockRouter.query).toEqual({ existingParam: 'value', search: 'test' })
+        expect(result.current[0]).toEqual({ search: 'test' })
+      })
+    })
+  })
+
+  describe('Dynamic route parameters', () => {
+    it('should preserve dynamic route parameters', async () => {
+      await mockRouter.push('/posts/123')
+
+      expect(mockRouter).toMatchObject({
+        pathname: '/posts/[id]',
+        query: { id: '123' },
+      })
+
+      const { result } = renderHook(() => useQueryParams(), {
+        wrapper: MemoryRouterProvider,
+      })
 
       act(() => {
         result.current[1]({ search: 'test' })
       })
 
-      console.log('Router query after setting search:', mockRouter.query)
-      console.log('Hook result after setting search:', result.current[0])
+      await waitFor(() => expect(result.current[0]).toHaveProperty('search', 'test'))
 
-      await waitFor(
-        () => {
-          console.log('Router query in waitFor:', mockRouter.query)
-          console.log('Hook result in waitFor:', result.current[0])
-          expect(mockRouter.query).toEqual({ id: '123', search: 'test' })
-        },
-        { timeout: 1000 },
-      )
-
+      expect(mockRouter.query).toEqual({ id: '123', search: 'test' })
       expect(result.current[0]).toEqual({ search: 'test' })
-
-      console.log('Final router query:', mockRouter.query)
-      console.log('Final hook result:', result.current[0])
     })
   })
 
@@ -168,8 +180,8 @@ describe('react-url-query-parameter-store', () => {
         wrapper: MemoryRouterProvider,
       })
 
-      act(() => {
-        mockRouter.push({ pathname: '/', query: { search: 'external' } })
+      await act(async () => {
+        await mockRouter.push({ pathname: '/', query: { search: 'external' } })
       })
 
       await waitFor(() => {}, { timeout: 5000 })
