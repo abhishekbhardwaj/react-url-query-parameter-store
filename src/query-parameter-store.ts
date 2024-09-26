@@ -1,13 +1,13 @@
 import type { ParsedUrlQuery } from 'querystring'
 
+import debounce from 'lodash/debounce'
 import isEqual from 'lodash/isEqual'
 import pick from 'lodash/pick'
 import Router, { useRouter } from 'next/router'
-import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useSyncExternalStore } from 'react'
 import type { z } from 'zod'
 
 export interface SetRouterQueryParamsOptions {
-  useExistingParams?: boolean
   shallow?: boolean
   locale?: string
   scroll?: boolean
@@ -25,6 +25,7 @@ interface QueryParamStore<P> {
   getSnapshot: (initialQuery?: ParsedUrlQuery) => P
   subscribe: (callback: () => void) => () => void
   setQueryParams: SetQueryParamsFn<P>
+  invalidate: () => void
 }
 
 const createStore = <P extends z.ZodType>(
@@ -33,6 +34,7 @@ const createStore = <P extends z.ZodType>(
 ): QueryParamStore<z.infer<P>> => {
   const subscribers = new Set<() => void>()
   let cachedSnapshot: z.infer<P> | null = null
+  let previousQuery: ParsedUrlQuery = {}
 
   // Attempt to parse the query using the provided schema
   const parseQuery = (query: ParsedUrlQuery): z.infer<P> => {
@@ -52,45 +54,50 @@ const createStore = <P extends z.ZodType>(
       return defaultValue.data as P
     }
 
-    return {} as P
+    return {} as z.infer<P>
+  }
+
+  const getSnapshot = (initialQuery?: ParsedUrlQuery): z.infer<P> => {
+    if (typeof window === 'undefined') {
+      // On the server, use initialQuery
+      return parseQuery(initialQuery || {})
+    }
+
+    // On the client, merge initialQuery with Router.query, giving priority to Router.query
+    const mergedQuery = { ...initialQuery, ...Router.query }
+
+    // Check if the query has changed before parsing
+    if (!cachedSnapshot || !isEqual(previousQuery, mergedQuery)) {
+      previousQuery = mergedQuery
+      cachedSnapshot = parseQuery(mergedQuery)
+    }
+
+    return cachedSnapshot
   }
 
   const store: QueryParamStore<z.infer<P>> = {
     // Get the current query params
-    getSnapshot: (initialQuery: ParsedUrlQuery = {}) => {
-      // Server-side
-      if (typeof window === 'undefined') {
-        return parseQuery(initialQuery) as P
-      }
-
-      // Client-side
-      if (Router.isReady) {
-        const newSnapshot = parseQuery(Router.query)
-        if (!cachedSnapshot || !isEqual(cachedSnapshot, newSnapshot)) {
-          cachedSnapshot = newSnapshot
-        }
-      } else if (!cachedSnapshot) {
-        cachedSnapshot = parseQuery(Router.query)
-      }
-
-      return cachedSnapshot as P
-    },
+    getSnapshot,
     // Subscribe to changes
     subscribe: (callback: () => void) => {
       subscribers.add(callback)
       return () => subscribers.delete(callback)
     },
+    // Invalidate the cache and notify subscribers
+    invalidate: () => {
+      cachedSnapshot = getSnapshot()
+      subscribers.forEach((callback) => callback())
+    },
     // Set new query params
     setQueryParams: (newParams: Partial<z.infer<P>>, options: SetQueryParamOptions = {}) => {
-      if (typeof window === 'undefined' && (options.logErrorsToConsole || routerOptions.logErrorsToConsole)) {
-        console.warn('createQueryParamStore.store.setQueryParams.serverSideUsageError')
+      if (typeof window === 'undefined') {
+        if (options.logErrorsToConsole || routerOptions.logErrorsToConsole) {
+          console.warn('createQueryParamStore.store.setQueryParams.serverSideUsageError')
+        }
         return
       }
 
-      const currentParams = Router.query
-      const updatedParams = options.useExistingParams ? { ...currentParams, ...newParams } : newParams
-
-      const parsedParams = schema.safeParse(updatedParams)
+      const parsedParams = schema.safeParse(newParams)
       if (parsedParams.success) {
         const pushOrReplace = options.replace || routerOptions.replace ? Router.replace : Router.push
 
@@ -145,8 +152,7 @@ const createStore = <P extends z.ZodType>(
         )
           .then(() => {
             // Invalidate cache to force re-fetch on next getSnapshot
-            cachedSnapshot = null
-            subscribers.forEach((callback) => callback())
+            store.invalidate()
           })
           .catch((e) => {
             if (options.logErrorsToConsole || routerOptions.logErrorsToConsole) {
@@ -172,68 +178,56 @@ const createUseQueryParamStore = <P extends z.ZodType>(
   return (initialQuery: ParsedUrlQuery = {}) => {
     const router = useRouter()
     const { isReady } = router
-    const lastParsedQueryRef = useRef<z.infer<P> | null>(null)
+    const initialQueryRef = useRef(initialQuery)
     const isInitializedRef = useRef(false)
+
+    // Create a debounced version of router.push
+    const debouncedSetQueryParams = useRef(
+      debounce(
+        (newParams: Partial<z.TypeOf<P>>, options?: SetQueryParamOptions) => {
+          queryParamStore.setQueryParams(newParams, options)
+        },
+        300,
+        { leading: false, trailing: true },
+      ),
+    ).current
 
     const state = useSyncExternalStore(
       queryParamStore.subscribe,
-      useCallback(() => {
-        // Use the appropriate snapshot based on whether the router is ready
-        const snapshot = isReady ? queryParamStore.getSnapshot() : queryParamStore.getSnapshot(initialQuery)
-
-        lastParsedQueryRef.current = snapshot
-        return snapshot as P
-      }, [isReady, initialQuery]),
-      () => queryParamStore.getSnapshot(initialQuery), // Server snapshot
+      // Use the snapshot from the store
+      () => queryParamStore.getSnapshot(initialQueryRef.current),
+      // Server snapshot
+      () => queryParamStore.getSnapshot(initialQueryRef.current),
     )
 
     useEffect(() => {
       if (!isReady) return
 
-      const parsedRouterQuery = queryParamStore.getSnapshot(router.query)
+      const parsedRouterQuery = queryParamStore.getSnapshot()
       const isStateEqualToRouterQuery = isEqual(state, parsedRouterQuery)
-
-      // Compare only the keys present in the state
-      const relevantRouterQuery = pick(router.query, Object.keys(state))
-      const isRelevantQueryEqual = isEqual(relevantRouterQuery, state)
 
       // Skip the initial update if the state is already equal to the router query
       if (!isInitializedRef.current) {
         isInitializedRef.current = true
 
-        if (!isStateEqualToRouterQuery || !isRelevantQueryEqual) {
+        if (!isStateEqualToRouterQuery) {
           // Update state to match parsed router query on first render
-          const mergedState = { ...router.query, ...state, ...parsedRouterQuery }
+          const mergedState = { ...initialQueryRef.current, ...router.query, ...state, ...parsedRouterQuery }
           queryParamStore.setQueryParams(mergedState, { replace: true, shallow: true })
         }
 
-        lastParsedQueryRef.current = parsedRouterQuery
         return
       }
 
       // Update the router query if the state has changed
-      if (!isStateEqualToRouterQuery || !isRelevantQueryEqual) {
-        const { pathname } = router
-        const query = { ...router.query, ...state }
-
-        router.push({ pathname, query }, undefined, { shallow: true }).catch((e) => {
-          if (routerOptions.logErrorsToConsole) {
-            console.error('createUseQueryParamStore.routerReplace', e)
-          }
-        })
-        lastParsedQueryRef.current = state
+      if (!isStateEqualToRouterQuery) {
+        debouncedSetQueryParams(state, { shallow: true, ...routerOptions })
       }
     }, [isReady, state, router.query, router.pathname])
 
     useEffect(() => {
       const handleRouteChange = () => {
-        const newSnapshot = queryParamStore.getSnapshot()
-        if (!isEqual(newSnapshot, lastParsedQueryRef.current)) {
-          lastParsedQueryRef.current = newSnapshot
-          queryParamStore.subscribe(() => {
-            // Trigger update with an empty object to force re-render
-          })
-        }
+        queryParamStore.invalidate()
       }
 
       // Listen for route changes to update the query parameters made outside of the hook
@@ -265,12 +259,16 @@ export const createQueryParamStore = <P extends z.ZodType>(
         ...options,
       })
 
-    return [params[key], setValue]
+    return [params?.[key], setValue]
   }
 
   const useQueryParams = (initialQuery: ParsedUrlQuery = {}): [z.infer<P>, SetQueryParamsFn<z.infer<P>>] => {
     const params = useQueryParamStore(initialQuery)
-    return [params, store.setQueryParams]
+
+    const setQueryParams: SetQueryParamsFn<z.infer<P>> = (newParams, options) =>
+      store.setQueryParams(newParams, { ...routerOptions, ...options })
+
+    return [params, setQueryParams]
   }
 
   return { useQueryParam, useQueryParams }

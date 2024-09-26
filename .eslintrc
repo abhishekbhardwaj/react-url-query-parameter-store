@@ -10,13 +10,11 @@
         "@typescript-eslint",
         "sonarjs",
         "import",
-        "unused-imports",
-        "jest"
+        "unused-imports"
     ],
     "env": {
         "es6": true,
-        "browser": true,
-        "jest": true
+        "browser": true
     },
     "rules": {
         "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
