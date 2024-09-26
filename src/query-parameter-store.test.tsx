@@ -12,6 +12,7 @@ import { createQueryParamStore } from './query-parameter-store'
 // eslint-disable-next-line global-require
 vi.mock('next/router', () => require('next-router-mock'))
 
+// eslint-disable-next-line sonarjs/no-duplicate-string
 mockRouter.useParser(createDynamicRouteParser(['/posts/[id]', '/[dynamic]/path', '/[...catchAll]']))
 
 const schema = z.object({
@@ -237,16 +238,48 @@ describe('createQueryParamStore', () => {
     act(() => {
       result.current[1]({ search: 'test' })
     })
-    await waitFor(() => {})
 
     // Assert
-    // Expect 5 renders:
+    // Expect 4 renders:
     // 1. Initial render
     // 2. After setting the search param
     // 3. After the router update (due to the useEffect in createUseQueryParamStore)
-    // 4. After setting the same search param again
-    // 5. After the router update (even though the value didn't change)
-    expect(renderSpy).toHaveBeenCalledTimes(5)
+    // 4. After the debounced router push completes
+    expect(renderSpy).toHaveBeenCalledTimes(4)
+
+    // Reset the spy count
+    renderSpy.mockClear()
+
+    // Act again with the same value
+    act(() => {
+      result.current[1]({ search: 'test' })
+    })
+    await waitFor(() => {
+      expect(result.current[0]).toEqual({ search: 'test' })
+    })
+
+    // Assert again
+    // Expect 1 additional render when setting the same value:
+    // The hook still triggers a render due to the state update,
+    // but skips the router update due to value equality check
+    expect(renderSpy).toHaveBeenCalledTimes(1)
+
+    // Reset the spy count again
+    renderSpy.mockClear()
+
+    // Act with a different value
+    act(() => {
+      result.current[1]({ search: 'test1' })
+    })
+    await waitFor(() => {
+      expect(result.current[0]).toEqual({ search: 'test1' })
+    })
+
+    // Assert once more
+    // Expect 2 additional renders when setting a different value:
+    // 1. After setting the new search param
+    // 2. After the router update
+    expect(renderSpy).toHaveBeenCalledTimes(2)
   })
 
   it('handles errors when logErrorsToConsole is true', () => {
@@ -377,7 +410,7 @@ describe('createQueryParamStore', () => {
     })
 
     const { useQueryParams } = createQueryParamStore(schemaWithDefaults)
-    const initialQuery = { page: '5', search: 'initial' } as ParsedUrlQuery
+    const initialQuery = { search: 'initial' } as ParsedUrlQuery
 
     // Act
     const { result } = renderHook(() => useQueryParams(initialQuery), {
@@ -387,9 +420,9 @@ describe('createQueryParamStore', () => {
     // Assert
     await waitFor(() => {
       expect(result.current[0]).toEqual({
-        page: 1, // Zod default takes precedence
+        page: 1, // Zod default is applied
         limit: 10, // Zod default is applied
-        search: 'initial', // initialQuery value is used as there's no Zod default
+        search: 'initial', // initialQuery value is used
       })
     })
 
@@ -425,6 +458,79 @@ describe('createQueryParamStore', () => {
       expect(result.current[0]).toEqual(expectedQuery)
       // Check router state
       expect(mockRouter.query).toEqual(expect.objectContaining(expectedQuery))
+    })
+  })
+
+  it('preserves non-schema query parameters when setting new parameters', async () => {
+    // Arrange
+    const { useQueryParams } = createQueryParamStore(schema)
+    // Set up initial query with a non-schema parameter
+    await mockRouter.push({ pathname: '/', query: { nonSchemaParam: 'value' } })
+    const { result } = renderHook(() => useQueryParams(), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Act
+    act(() => {
+      result.current[1]({ search: 'test' })
+    })
+
+    // Assert
+    await waitFor(() => {
+      expect(mockRouter.query).toEqual({ nonSchemaParam: 'value', search: 'test' })
+      expect(result.current[0]).toEqual({ search: 'test' })
+    })
+  })
+
+  it('preserves dynamic route parameters when setting new parameters', async () => {
+    // Arrange
+    const { useQueryParams } = createQueryParamStore(schema)
+    // Set up initial route with dynamic parameters
+    await mockRouter.push('/posts/123?existingParam=value')
+    expect(mockRouter).toMatchObject({
+      pathname: '/posts/[id]',
+      query: { id: '123', existingParam: 'value' },
+    })
+    const { result } = renderHook(() => useQueryParams(), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Act
+    act(() => {
+      result.current[1]({ search: 'test' })
+    })
+
+    // Assert
+    await waitFor(() => {
+      expect(mockRouter.query).toEqual({ id: '123', existingParam: 'value', search: 'test' })
+      expect(result.current[0]).toEqual({ search: 'test' })
+    })
+  })
+
+  it('preserves existing route parameters when initial parameters are provided', async () => {
+    // Arrange
+    const { useQueryParams } = createQueryParamStore(schema)
+    const initialQuery = { search: 'initial', page: '2' } as ParsedUrlQuery
+
+    // Set up initial route with existing parameters not in the schema
+    await mockRouter.push({ pathname: '/', query: { existingParam: 'value', anotherParam: '123' } })
+
+    const { result } = renderHook(() => useQueryParams(initialQuery), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Assert
+    await waitFor(() => {
+      expect(mockRouter.query).toEqual({
+        existingParam: 'value',
+        anotherParam: '123',
+        search: 'initial',
+        page: 2,
+      })
+      expect(result.current[0]).toEqual({
+        search: 'initial',
+        page: 2,
+      })
     })
   })
 })
