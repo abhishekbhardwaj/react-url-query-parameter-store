@@ -65,7 +65,7 @@ const createStore = <P extends z.ZodType>(
 
       // Client-side
       if (Router.isReady) {
-        const newSnapshot = parseQuery(Router.query)
+        const newSnapshot = parseQuery({ ...initialQuery, ...Router.query })
         if (!cachedSnapshot || !isEqual(cachedSnapshot, newSnapshot)) {
           cachedSnapshot = newSnapshot
         }
@@ -179,7 +179,9 @@ const createUseQueryParamStore = <P extends z.ZodType>(
       queryParamStore.subscribe,
       useCallback(() => {
         // Use the appropriate snapshot based on whether the router is ready
-        const snapshot = isReady ? queryParamStore.getSnapshot() : queryParamStore.getSnapshot(initialQuery)
+        const snapshot = isReady
+          ? queryParamStore.getSnapshot({ ...initialQuery, ...router.query })
+          : queryParamStore.getSnapshot(initialQuery)
 
         lastParsedQueryRef.current = snapshot
         return snapshot as P
