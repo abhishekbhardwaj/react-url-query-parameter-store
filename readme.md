@@ -45,7 +45,8 @@ It requires you to have the following packages pre-installed at minimum in your 
 {
   "react": "^18.0.0",
   "zod": "^3.23.8",
-  "next": "^14.2.4"
+  "next": "^14.2.4",
+  "lodash": "^4.17.21"
 }
 ```
 

@@ -8,14 +8,14 @@
   },
   "author": "Abhishek Bhardwaj <abhishek66ster@gmail.com>",
   "license": "MIT",
-  "main": "./dist/cjs/src/index.js",
-  "module": "./dist/esm/src/index.js",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
   "types": "./dist/cjs/index.d.ts",
   "exports": {
     "types": "./dist/cjs/index.d.ts",
-    "require": "./dist/cjs/src/index.js",
-    "import": "./dist/esm/src/index.js",
-    "default": "./dist/esm/src/index.js"
+    "require": "./dist/cjs/index.js",
+    "import": "./dist/esm/index.js",
+    "default": "./dist/esm/index.js"
   },
   "files": [
     "/dist"
@@ -72,6 +72,7 @@
     "is-ci": "^3.0.1",
     "jsdom": "^25.0.1",
     "lint-staged": "^15.2.7",
+    "lodash": "^4.17.21",
     "next": "^14.2.4",
     "next-router-mock": "^0.9.13",
     "open": "^10.1.0",
@@ -94,6 +95,7 @@
     "zod": "^3.23.8"
   },
   "peerDependencies": {
+    "lodash": "^4.17.21",
     "next": "^14.2.4",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
@@ -105,7 +107,6 @@
     }
   ],
   "dependencies": {
-    "lodash": "^4.17.21",
     "tslib": "^2.6.3"
   },
   "packageManager": "pnpm@9.2.0"

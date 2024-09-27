@@ -38,8 +38,14 @@ export default {
   treeshake: {},
   plugins: [
     peerDepsExternal(),
-    resolve({ extensions: [...RESOLVE_DEFAULTS.extensions, '.cjs', '.mjs', '.jsx', '.tsx'], browser: true }),
-    commonjs(),
+    resolve({
+      extensions: [...RESOLVE_DEFAULTS.extensions, '.cjs', '.mjs', '.jsx', '.tsx'],
+      browser: true,
+      preferBuiltins: false,
+    }),
+    commonjs({
+      include: /node_modules/,
+    }),
     json(),
     typescript({
       tsconfig: './tsconfig.build.json',
@@ -107,5 +113,10 @@ export default {
     'tslib',
     'react',
     'react-dom',
+    'next/router',
+    'lodash',
+    'lodash/debounce',
+    'lodash/isEqual',
+    'lodash/pick',
   ],
 }
