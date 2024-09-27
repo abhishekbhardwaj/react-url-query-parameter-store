@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.6.0...v1.7.0) (2024-09-27)
+
+
+### Features
+
+* ✨ add lodash as a peer dependency and update package structure in configuration files ([4fe6ff5](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/4fe6ff5e09b216cd64c64d025e30c66ba8f19a5e))
+
 # [1.6.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.5.0...v1.6.0) (2024-09-26)
 
 
