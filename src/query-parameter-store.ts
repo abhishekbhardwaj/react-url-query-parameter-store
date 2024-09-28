@@ -26,6 +26,7 @@ interface QueryParamStore<P> {
   subscribe: (callback: () => void) => () => void
   setQueryParams: SetQueryParamsFn<P>
   invalidate: () => void
+  resetInitialization: () => void
 }
 
 const createStore = <P extends z.ZodType>(
@@ -35,6 +36,8 @@ const createStore = <P extends z.ZodType>(
   const subscribers = new Set<() => void>()
   let cachedSnapshot: z.infer<P> | null = null
   let previousQuery: ParsedUrlQuery = {}
+  let isInitialized = false
+  let initialQuery: ParsedUrlQuery = {}
 
   // Attempt to parse the query using the provided schema
   const parseQuery = (query: ParsedUrlQuery): z.infer<P> => {
@@ -57,10 +60,15 @@ const createStore = <P extends z.ZodType>(
     return {} as z.infer<P>
   }
 
-  const getSnapshot = (initialQuery?: ParsedUrlQuery): z.infer<P> => {
+  const getSnapshot = (newInitialQuery?: ParsedUrlQuery): z.infer<P> => {
+    if (!isInitialized && newInitialQuery) {
+      initialQuery = newInitialQuery
+      isInitialized = true
+    }
+
     if (typeof window === 'undefined') {
       // On the server, use initialQuery
-      return parseQuery(initialQuery || {})
+      return parseQuery(initialQuery)
     }
 
     // On the client, merge initialQuery with Router.query, giving priority to Router.query
@@ -87,6 +95,11 @@ const createStore = <P extends z.ZodType>(
     invalidate: () => {
       cachedSnapshot = getSnapshot()
       subscribers.forEach((callback) => callback())
+    },
+    // Reset the store to its initial state
+    resetInitialization: () => {
+      isInitialized = false
+      initialQuery = {}
     },
     // Set new query params
     setQueryParams: (newParams: Partial<z.infer<P>>, options: SetQueryParamOptions = {}) => {
@@ -181,6 +194,12 @@ const createUseQueryParamStore = <P extends z.ZodType>(
     const initialQueryRef = useRef(initialQuery)
     const isInitializedRef = useRef(false)
 
+    // Use an effect to initialize the store with the first call's initialQuery
+    useEffect(() => {
+      queryParamStore.resetInitialization()
+      queryParamStore.getSnapshot(initialQueryRef.current)
+    }, [])
+
     // Create a debounced version of router.push
     const debouncedSetQueryParams = useRef(
       debounce(
@@ -195,9 +214,9 @@ const createUseQueryParamStore = <P extends z.ZodType>(
     const state = useSyncExternalStore(
       queryParamStore.subscribe,
       // Use the snapshot from the store
-      () => queryParamStore.getSnapshot(initialQueryRef.current),
+      () => queryParamStore.getSnapshot(),
       // Server snapshot
-      () => queryParamStore.getSnapshot(initialQueryRef.current),
+      () => queryParamStore.getSnapshot(),
     )
 
     useEffect(() => {
@@ -210,7 +229,22 @@ const createUseQueryParamStore = <P extends z.ZodType>(
       if (!isInitializedRef.current) {
         isInitializedRef.current = true
 
-        if (!isStateEqualToRouterQuery) {
+        // Get zod defaults by parsing an empty object
+        const zodDefaults = queryParamStore.getSnapshot({})
+
+        // Check if there are any default values not present in the URL
+        const defaultsNotInUrl = Object.keys({ ...zodDefaults, ...initialQueryRef.current }).reduce((acc, key) => {
+          if (!(key in router.query)) {
+            if (initialQueryRef.current[key] !== undefined) {
+              acc[key] = initialQueryRef.current[key]
+            } else if (zodDefaults[key as keyof typeof zodDefaults] !== undefined) {
+              acc[key] = zodDefaults[key as keyof typeof zodDefaults]
+            }
+          }
+          return acc
+        }, {} as ParsedUrlQuery)
+
+        if (Object.keys(defaultsNotInUrl).length > 0 || !isStateEqualToRouterQuery) {
           // Update state to match parsed router query on first render
           const mergedState = { ...initialQueryRef.current, ...router.query, ...state, ...parsedRouterQuery }
           queryParamStore.setQueryParams(mergedState, { replace: true, shallow: true })

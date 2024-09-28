@@ -1,17 +1,10 @@
+import Console from '@/console'
+import { useQueryParams } from '@/store'
 import { useEffect } from 'react'
-import { createQueryParamStore } from 'react-url-query-parameter-store'
-import { z } from 'zod'
-
-const schema = z.object({
-  search: z.string().optional(),
-  page: z.coerce.number().optional(),
-})
-
-const { useQueryParams } = createQueryParamStore(schema)
 
 export default function Home() {
-  // const [params, setParams] = useQueryParams({ search: 'initial', page: '1' })
-  const [params, setParams] = useQueryParams()
+  const [params, setParams] = useQueryParams({ search: 'initial', page: '1' })
+
   useEffect(() => {
     console.log(params)
   }, [params])
@@ -19,9 +12,7 @@ export default function Home() {
   return (
     <div className="grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-8 pb-20 gap-8 sm:p-20 font-sans">
       <h1 className="text-3xl font-bold">Home</h1>
-      <pre className="font-mono text-sm bg-gray-100 p-4 rounded-lg overflow-auto max-w-full">
-        {JSON.stringify(params, null, 2)}
-      </pre>
+      <Console />
 
       <div className="flex flex-col gap-4 w-full max-w-md">
         <input

@@ -533,4 +533,33 @@ describe('createQueryParamStore', () => {
       })
     })
   })
+
+  it('sets default query parameters in URL when not initially available', async () => {
+    // Arrange
+    const schemaWithDefaults = z.object({
+      search: z.string().default('defaultSearch'),
+      page: z.coerce.number().default(1),
+      filters: z.array(z.string()).default(['defaultFilter']),
+    })
+    const { useQueryParams } = createQueryParamStore(schemaWithDefaults)
+
+    // Act
+    const { result } = renderHook(() => useQueryParams(), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Assert
+    await waitFor(() => {
+      expect(result.current[0]).toEqual({
+        search: 'defaultSearch',
+        page: 1,
+        filters: ['defaultFilter'],
+      })
+      expect(mockRouter.query).toEqual({
+        search: 'defaultSearch',
+        page: 1,
+        filters: ['defaultFilter'],
+      })
+    })
+  })
 })

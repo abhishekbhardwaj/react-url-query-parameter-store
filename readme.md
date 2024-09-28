@@ -248,3 +248,21 @@ Hook for managing multiple query parameters.
 Returns:
 - Object containing all current query parameters
 - Setter function for updating multiple parameters (accepts `SetQueryParamOptions`)
+
+## Important Note on Initialization
+
+When using `useQueryParam` or `useQueryParams` hooks, the `initialQueryParams` are only used for the first initialization of the store. Subsequent calls to these hooks with different `initialQueryParams` will not affect the store's state. This ensures consistency across your application but may lead to unexpected behavior if not properly understood.
+
+Example:
+
+```typescript
+// This will initialize the store with { search: 'initial' }
+const [search1, setSearch1] = useQueryParam("search", { search: 'initial' });
+
+// This will use the same store, initialized above. The { search: 'different' } will be ignored.
+const [search2, setSearch2] = useQueryParam("search", { search: 'different' });
+
+console.log(search1 === search2); // true
+```
+
+If you need to reset or change the initial state of the store, you'll need to create a new store instance using `createQueryParamStore`.
