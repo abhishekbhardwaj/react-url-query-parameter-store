@@ -562,4 +562,68 @@ describe('createQueryParamStore', () => {
       })
     })
   })
+
+  it('does not cause infinite loops when state and router query are updated simultaneously', async () => {
+    // Arrange
+    const { useQueryParams } = createQueryParamStore(schema)
+    const renderSpy = vi.fn()
+    const { result } = renderHook(
+      () => {
+        renderSpy()
+        return useQueryParams()
+      },
+      {
+        wrapper: MemoryRouterProvider,
+      },
+    )
+
+    // Act: Simulate simultaneous state and router updates
+    await act(async () => {
+      result.current[1]({ search: 'test1' })
+      await mockRouter.push({ query: { search: 'test2' } })
+    })
+
+    // Assert: Ensure that re-renders do not exceed a reasonable number
+    expect(renderSpy.mock.calls.length).toBeLessThan(5)
+  })
+
+  it('handles the case when router is not ready', () => {
+    // Arrange
+    const { useQueryParams } = createQueryParamStore(schema)
+    // eslint-disable-next-line global-require
+    const useRouterMock = vi.spyOn(require('next/router'), 'useRouter')
+    useRouterMock.mockReturnValue({ isReady: false })
+
+    // Act
+    const { result } = renderHook(() => useQueryParams(), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Assert
+    expect(result.current[0]).toEqual({}) // Should return default/empty state
+    // Clean up
+    useRouterMock.mockRestore()
+  })
+
+  it('allows multiple instances to operate independently', () => {
+    // Arrange
+    const schema1 = z.object({ param1: z.string().optional() })
+    const schema2 = z.object({ param2: z.string().optional() })
+    const { useQueryParams: useQueryParams1 } = createQueryParamStore(schema1)
+    const { useQueryParams: useQueryParams2 } = createQueryParamStore(schema2)
+
+    const { result: result1 } = renderHook(() => useQueryParams1(), { wrapper: MemoryRouterProvider })
+    const { result: result2 } = renderHook(() => useQueryParams2(), { wrapper: MemoryRouterProvider })
+
+    // Act
+    act(() => {
+      result1.current[1]({ param1: 'value1' })
+      result2.current[1]({ param2: 'value2' })
+    })
+
+    // Assert
+    expect(result1.current[0]).toEqual({ param1: 'value1' })
+    expect(result2.current[0]).toEqual({ param2: 'value2' })
+    expect(mockRouter.query).toEqual({ param1: 'value1', param2: 'value2' })
+  })
 })
