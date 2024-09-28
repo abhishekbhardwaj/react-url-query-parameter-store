@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.7.0...v1.7.1) (2024-09-28)
+
+
+### Bug Fixes
+
+* 🐛 enhance default query parameter support + fix nested use of useQueryParam(s) ([78b650e](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/78b650ea7c90ecec0861216ccfbb86dd4ddd5521))
+
 # [1.7.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.6.0...v1.7.0) (2024-09-27)
 
 
