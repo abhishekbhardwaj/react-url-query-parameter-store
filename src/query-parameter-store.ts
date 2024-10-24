@@ -13,6 +13,7 @@ export interface SetRouterQueryParamsOptions {
   scroll?: boolean
   replace?: boolean
   logErrorsToConsole?: boolean
+  keepEmptyParameters?: boolean
 }
 
 export type SetQueryParamOptions = SetRouterQueryParamsOptions & {
@@ -27,6 +28,21 @@ interface QueryParamStore<P> {
   setQueryParams: SetQueryParamsFn<P>
   invalidate: () => void
   resetInitialization: () => void
+}
+
+const filterEmptyValues = (obj: Record<string, any>): Record<string, any> => {
+  return Object.entries(obj).reduce(
+    (acc, [key, value]) => {
+      const isEmpty =
+        value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)
+
+      if (!isEmpty) {
+        acc[key] = value
+      }
+      return acc
+    },
+    {} as Record<string, any>,
+  )
 }
 
 const createStore = <P extends z.ZodType>(
@@ -146,10 +162,15 @@ const createStore = <P extends z.ZodType>(
           ...dynamicParams,
         } as z.infer<P>
 
+        const finalParams =
+          options.keepEmptyParameters || routerOptions.keepEmptyParameters
+            ? mergedParams
+            : filterEmptyValues(mergedParams)
+
         pushOrReplace(
           {
             pathname: options.pathname || Router.pathname,
-            query: mergedParams,
+            query: finalParams,
           },
           undefined,
           pick(

@@ -787,4 +787,88 @@ describe('createQueryParamStore', () => {
       })
     })
   })
+
+  it('removes empty parameters by default', async () => {
+    // Arrange
+    const { useQueryParams } = createQueryParamStore(schema)
+    const { result } = renderHook(() => useQueryParams(), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Act
+    act(() => {
+      result.current[1]({
+        search: '',
+        filters: [],
+        page: undefined,
+      })
+    })
+
+    // Assert
+    await waitFor(() => {
+      expect(mockRouter.query).toEqual({})
+      expect(result.current[0]).toEqual({})
+    })
+  })
+
+  it('keeps empty parameters when keepEmptyParams is true', async () => {
+    // Arrange
+    const { useQueryParams } = createQueryParamStore(schema)
+    const { result } = renderHook(() => useQueryParams(), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Act
+    act(() => {
+      result.current[1](
+        {
+          search: '',
+          filters: [],
+          page: undefined,
+        },
+        { keepEmptyParameters: true },
+      )
+    })
+
+    // Assert
+    await waitFor(() => {
+      expect(mockRouter.query).toEqual({
+        search: '',
+        filters: [],
+      })
+      expect(result.current[0]).toEqual({
+        search: '',
+        filters: [],
+      })
+    })
+  })
+
+  it('preserves non-empty parameters while removing empty ones', async () => {
+    // Arrange
+    const { useQueryParams } = createQueryParamStore(schema)
+    const { result } = renderHook(() => useQueryParams(), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Act
+    act(() => {
+      result.current[1]({
+        search: 'test',
+        filters: [],
+        page: 1,
+      })
+    })
+
+    // Assert
+    await waitFor(() => {
+      expect(mockRouter.query).toEqual({
+        search: 'test',
+        page: 1,
+      })
+      expect(result.current[0]).toEqual({
+        search: 'test',
+        page: 1,
+      })
+    })
+  })
 })
