@@ -1,3 +1,15 @@
+# [1.8.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.7.1...v1.8.0) (2024-10-24)
+
+
+### Bug Fixes
+
+* 🐛 enhance query parameter store for SSR and initialization scenarios ([7c1c7e4](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/7c1c7e45827c213d0ed312940cc85a6a41571f07))
+
+
+### Features
+
+* ✨ remove empty query parameters by default from the query parameters ([eea5b3a](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/eea5b3a4a550eff3ad1bf3cc27f3930edf66377f))
+
 ## [1.7.1](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.7.0...v1.7.1) (2024-09-28)
 
 
