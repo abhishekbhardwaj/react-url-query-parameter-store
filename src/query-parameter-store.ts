@@ -216,7 +216,7 @@ const createUseQueryParamStore = <P extends z.ZodType>(
       // Use the snapshot from the store
       () => queryParamStore.getSnapshot(),
       // Server snapshot
-      () => queryParamStore.getSnapshot(),
+      () => queryParamStore.getSnapshot(initialQuery),
     )
 
     useEffect(() => {
@@ -246,7 +246,17 @@ const createUseQueryParamStore = <P extends z.ZodType>(
 
         if (Object.keys(defaultsNotInUrl).length > 0 || !isStateEqualToRouterQuery) {
           // Update state to match parsed router query on first render
-          const mergedState = { ...initialQueryRef.current, ...router.query, ...state, ...parsedRouterQuery }
+          // Reorder merging priority:
+          // 1. zodDefaults (lowest priority)
+          // 2. initialQueryRef.current
+          // 3. router.query
+          // 4. parsedRouterQuery (highest priority - contains validated state)
+          const mergedState = {
+            ...zodDefaults,
+            ...initialQueryRef.current,
+            ...router.query,
+            ...parsedRouterQuery,
+          }
           queryParamStore.setQueryParams(mergedState, { replace: true, shallow: true })
         }
 

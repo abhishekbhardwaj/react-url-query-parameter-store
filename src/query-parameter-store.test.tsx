@@ -626,4 +626,165 @@ describe('createQueryParamStore', () => {
     expect(result2.current[0]).toEqual({ param2: 'value2' })
     expect(mockRouter.query).toEqual({ param1: 'value1', param2: 'value2' })
   })
+
+  it('correctly synchronizes initial SSR state with client state', async () => {
+    // Arrange
+    const schemaWithDefault = z.object({
+      status: z.string().default('all'),
+      search: z.string().optional(),
+    })
+    const { useQueryParams } = createQueryParamStore(schemaWithDefault)
+
+    // Simulate SSR by setting initial router state
+    await mockRouter.push({ query: { status: 'draft' } })
+
+    // Act
+    const { result } = renderHook(() => useQueryParams(), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Assert
+    await waitFor(() => {
+      // Changed expectation to match the schema definition
+      expect(result.current[0]).toEqual({ status: 'draft' })
+      expect(mockRouter.query.status).toBe('draft')
+    })
+  })
+
+  it('maintains router query value over default value during initialization', async () => {
+    // Arrange
+    const schemaWithDefault = z.object({
+      status: z.string().default('all'),
+    })
+    const { useQueryParams } = createQueryParamStore(schemaWithDefault)
+
+    // Set initial router state
+    await mockRouter.push({ query: { status: 'draft' } })
+
+    // Act
+    const { result } = renderHook(() => useQueryParams(), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Assert
+    await waitFor(() => {
+      expect(result.current[0].status).toBe('draft')
+    })
+
+    // Update the value
+    act(() => {
+      result.current[1]({ status: 'sent' })
+    })
+
+    // Assert the update worked
+    await waitFor(() => {
+      expect(result.current[0].status).toBe('sent')
+    })
+  })
+
+  it('handles initialization order correctly with multiple sources', async () => {
+    // Arrange
+    const customSchema = z.object({
+      status: z.string().default('all'),
+      search: z.string().optional(),
+    })
+
+    const { useQueryParams } = createQueryParamStore(customSchema)
+
+    // Set up different values from different sources
+    const initialQuery = { status: 'initial' } as ParsedUrlQuery
+    await mockRouter.push({ query: { status: 'router' } })
+
+    // Act
+    const { result } = renderHook(() => useQueryParams(initialQuery), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Assert - router query should take precedence
+    await waitFor(() => {
+      expect(result.current[0].status).toBe('router')
+    })
+  })
+
+  it('preserves SSR values during hydration', async () => {
+    // Arrange
+    const customSchema = z.object({
+      status: z.string(),
+      search: z.string().optional(),
+    })
+    const { useQueryParams } = createQueryParamStore(customSchema)
+    const ssrQuery = { status: 'sent', search: '' }
+
+    // Act
+    const { result } = renderHook(() => useQueryParams(ssrQuery), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Assert
+    expect(result.current[0]).toEqual(ssrQuery)
+
+    // Simulate client-side navigation
+    await act(async () => {
+      await mockRouter.push({ query: { status: 'draft' } })
+    })
+
+    // Check that new values are reflected
+    await waitFor(() => {
+      expect(result.current[0]).toEqual({ status: 'draft', search: '' })
+    })
+  })
+
+  it('handles redirect scenarios correctly', async () => {
+    // Arrange
+    const customSchema = z.object({
+      status: z.string(),
+      page: z.string().optional(),
+    })
+    const { useQueryParams } = createQueryParamStore(customSchema)
+    const initialQuery = { status: 'initial' }
+
+    // Act - simulate a redirect scenario
+    const { result, rerender } = renderHook(() => useQueryParams(initialQuery), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Simulate redirect by changing router query
+    await act(async () => {
+      await mockRouter.push({ query: { status: 'redirected', page: '2' } })
+    })
+
+    // Force rerender to simulate redirect completion
+    rerender()
+
+    // Assert
+    await waitFor(() => {
+      expect(result.current[0]).toEqual({ status: 'redirected', page: '2' })
+    })
+  })
+
+  it('maintains query param order during initialization', async () => {
+    // Arrange
+    const customSchema = z.object({
+      status: z.string().default('all'),
+      search: z.string().optional(),
+    })
+    const { useQueryParams } = createQueryParamStore(customSchema)
+
+    // Set up competing values
+    const ssrQuery = { status: 'ssr', search: 'ssr-search' }
+    await mockRouter.push({ query: { status: 'client', search: 'client-search' } })
+
+    // Act
+    const { result } = renderHook(() => useQueryParams(ssrQuery), {
+      wrapper: MemoryRouterProvider,
+    })
+
+    // Assert - client values should take precedence
+    await waitFor(() => {
+      expect(result.current[0]).toEqual({
+        status: 'client',
+        search: 'client-search',
+      })
+    })
+  })
 })
