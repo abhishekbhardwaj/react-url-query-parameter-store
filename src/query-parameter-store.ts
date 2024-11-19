@@ -235,7 +235,7 @@ const createUseQueryParamStore = <P extends z.ZodType>(
     const state = useSyncExternalStore(
       queryParamStore.subscribe,
       // Use the snapshot from the store
-      () => queryParamStore.getSnapshot(),
+      () => queryParamStore.getSnapshot(initialQuery),
       // Server snapshot
       () => queryParamStore.getSnapshot(initialQuery),
     )
