@@ -20,7 +20,7 @@ export type SetQueryParamOptions = SetRouterQueryParamsOptions & {
   pathname?: string
 }
 
-type SetQueryParamsFn<T> = (newParams: Partial<T>, options?: SetQueryParamOptions) => void
+type SetQueryParamsFn<T> = (newParams: Partial<T>, options?: SetQueryParamOptions) => Promise<boolean>
 
 interface QueryParamStore<P> {
   getSnapshot: (initialQuery?: ParsedUrlQuery) => P
@@ -123,7 +123,8 @@ const createStore = <P extends z.ZodType>(
         if (options.logErrorsToConsole || routerOptions.logErrorsToConsole) {
           console.warn('createQueryParamStore.store.setQueryParams.serverSideUsageError')
         }
-        return
+
+        return Promise.resolve(false)
       }
 
       const parsedParams = schema.safeParse(newParams)
@@ -167,7 +168,7 @@ const createStore = <P extends z.ZodType>(
             ? mergedParams
             : filterEmptyValues(mergedParams)
 
-        pushOrReplace(
+        return pushOrReplace(
           {
             pathname: options.pathname || Router.pathname,
             query: finalParams,
@@ -184,21 +185,26 @@ const createStore = <P extends z.ZodType>(
             ['shallow', 'locale', 'scroll'],
           ),
         )
-          .then(() => {
+          .then((success) => {
             // Invalidate cache to force re-fetch on next getSnapshot
             store.invalidate()
+            return success
           })
           .catch((e) => {
             if (options.logErrorsToConsole || routerOptions.logErrorsToConsole) {
               console.error('createQueryParamStore.store.setQueryParams.routerPush', e)
             }
+
+            return false
           })
-      } else {
-        // eslint-disable-next-line no-lonely-if
-        if (options.logErrorsToConsole ?? routerOptions.logErrorsToConsole) {
-          console.error('createQueryParamStore.store.setQueryParams.newParamsDoNotMatchSchema', parsedParams.error)
-        }
       }
+
+      // eslint-disable-next-line no-lonely-if
+      if (options.logErrorsToConsole ?? routerOptions.logErrorsToConsole) {
+        console.error('createQueryParamStore.store.setQueryParams.newParamsDoNotMatchSchema', parsedParams.error)
+      }
+
+      return Promise.resolve(false)
     },
   }
 
@@ -225,7 +231,7 @@ const createUseQueryParamStore = <P extends z.ZodType>(
     const debouncedSetQueryParams = useRef(
       debounce(
         (newParams: Partial<z.TypeOf<P>>, options?: SetQueryParamOptions) => {
-          queryParamStore.setQueryParams(newParams, options)
+          return queryParamStore.setQueryParams(newParams, options)
         },
         300,
         { leading: false, trailing: true },
@@ -278,7 +284,7 @@ const createUseQueryParamStore = <P extends z.ZodType>(
             ...router.query,
             ...parsedRouterQuery,
           }
-          queryParamStore.setQueryParams(mergedState, { replace: true, shallow: true })
+          queryParamStore.setQueryParams(mergedState, { replace: true, shallow: true }).catch(() => {})
         }
 
         return
@@ -286,7 +292,7 @@ const createUseQueryParamStore = <P extends z.ZodType>(
 
       // Update the router query if the state has changed
       if (!isStateEqualToRouterQuery) {
-        debouncedSetQueryParams(state, { shallow: true, ...routerOptions })
+        debouncedSetQueryParams(state, { shallow: true, ...routerOptions })?.catch(() => {})
       }
     }, [isReady, state, router.query, router.pathname])
 
@@ -316,7 +322,7 @@ export const createQueryParamStore = <P extends z.ZodType>(
   const useQueryParam = <K extends keyof z.infer<P>>(
     key: K,
     initialQuery: ParsedUrlQuery = {},
-  ): [z.infer<P>[K], (newValue: z.infer<P>[K], options?: SetQueryParamOptions) => void] => {
+  ): [z.infer<P>[K], (newValue: z.infer<P>[K], options?: SetQueryParamOptions) => Promise<boolean>] => {
     const params = useQueryParamStore(initialQuery)
     const setValue = (newValue: z.infer<P>[K], options?: SetQueryParamOptions) =>
       store.setQueryParams({ [key]: newValue } as Partial<z.infer<P>>, {

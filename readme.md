@@ -51,9 +51,9 @@ It requires you to have the following packages pre-installed at minimum in your 
 ```
 
 > Note: It may work with older versions of the packages above too. I have personally tested it with Next 12.0.0 and it worked.
+## Features & Use Cases
 
-## Features
-
+### Core Features
 - Manage application state using URL query parameters
 - Type-safe with Zod schema validation
 - Seamless integration with Next.js Router. **Support for other routers will come soon.**
@@ -62,12 +62,10 @@ It requires you to have the following packages pre-installed at minimum in your 
   - Performs shallow routing by default but this is customizable for the entire store or just on a per-use basis.
 - Server-side rendering support
   - Allows you to specify initial query values when the router itself is not ready.
-- Listens for URL updates outside of the hooks and makes sure its own stateis always up to date.
+- Listens for URL updates outside of the hooks and makes sure its own state is always up to date.
 - The library internally does shallow comparisons to prevent unnecessary re-renders.
 
-## Usage
-
-`react-url-query-parameter-store` caters to a variety of use-cases.
+### Common Use Cases
 
 1. **State Persistence**: Store application state in the URL for easy sharing and bookmarking.
 2. **User Preferences**: Manage user settings like language, theme, or view options.
@@ -84,6 +82,8 @@ It requires you to have the following packages pre-installed at minimum in your 
 13. **Cross-Component Communication**: Use URL parameters as a shared state between unrelated components.
 14. **Wizard Steps**: Track progress in multi-step processes or wizards.
 15. **Conditional Rendering**: Toggle visibility of components based on URL parameters.
+
+### Examples
 
 ```tsx
 import { z } from "zod";

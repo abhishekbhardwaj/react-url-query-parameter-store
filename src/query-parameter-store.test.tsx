@@ -30,7 +30,7 @@ describe('createQueryParamStore', () => {
     vi.clearAllMocks()
   })
 
-  it('gets and sets a single parameter', () => {
+  it('gets and sets a single parameter', async () => {
     // Arrange
     const { useQueryParam } = createQueryParamStore(schema)
     const { result } = renderHook(() => useQueryParam('search'), {
@@ -39,8 +39,8 @@ describe('createQueryParamStore', () => {
     const given = 'test query'
 
     // Act
-    act(() => {
-      result.current[1](given)
+    await act(async () => {
+      await result.current[1](given)
     })
 
     // Assert
@@ -56,8 +56,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]({ search: 'test', page: 2 })
+    await act(async () => {
+      await result.current[1]({ search: 'test', page: 2 })
     })
 
     // Assert
@@ -67,7 +67,7 @@ describe('createQueryParamStore', () => {
     })
   })
 
-  it('validates parameters against the schema', () => {
+  it('validates parameters against the schema', async () => {
     // Arrange
     const { useQueryParams } = createQueryParamStore(schema)
     const { result } = renderHook(() => useQueryParams(), {
@@ -75,8 +75,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]({ search: 'test', page: '2', invalidParam: 'value' } as any)
+    await act(async () => {
+      await result.current[1]({ search: 'test', page: '2', invalidParam: 'value' } as any)
     })
 
     // Assert
@@ -84,7 +84,7 @@ describe('createQueryParamStore', () => {
     expect(mockRouter.query).not.toHaveProperty('invalidParam')
   })
 
-  it('handles array parameters correctly', () => {
+  it('handles array parameters correctly', async () => {
     // Arrange
     const { useQueryParam } = createQueryParamStore(schema)
     const { result } = renderHook(() => useQueryParam('filters'), {
@@ -92,8 +92,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1](['filter1', 'filter2'])
+    await act(async () => {
+      await result.current[1](['filter1', 'filter2'])
     })
 
     // Assert
@@ -115,7 +115,7 @@ describe('createQueryParamStore', () => {
     expect(result.current[0]).toEqual(initialQuery)
   })
 
-  it('handles shallow routing', () => {
+  it('handles shallow routing', async () => {
     // Arrange
     const { useQueryParam } = createQueryParamStore(schema)
     vi.spyOn(mockRouter, 'push')
@@ -124,8 +124,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]('test', { shallow: true })
+    await act(async () => {
+      await result.current[1]('test', { shallow: true })
     })
 
     // Assert
@@ -136,7 +136,7 @@ describe('createQueryParamStore', () => {
     )
   })
 
-  it('handles replace option', () => {
+  it('handles replace option', async () => {
     // Arrange
     const { useQueryParam } = createQueryParamStore(schema)
     vi.spyOn(mockRouter, 'replace')
@@ -145,8 +145,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]('test', { replace: true })
+    await act(async () => {
+      await result.current[1]('test', { replace: true })
     })
 
     // Assert
@@ -163,8 +163,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]({ search: 'test' })
+    await act(async () => {
+      await result.current[1]({ search: 'test' })
     })
 
     // Assert
@@ -187,8 +187,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]({ search: 'test' })
+    await act(async () => {
+      await result.current[1]({ search: 'test' })
     })
 
     // Assert
@@ -229,14 +229,16 @@ describe('createQueryParamStore', () => {
     )
 
     // Act
-    act(() => {
-      result.current[1]({ search: 'test' })
+    await act(async () => {
+      await result.current[1]({ search: 'test' })
     })
+
     await waitFor(() => {
       expect(result.current[0]).toEqual({ search: 'test' })
     })
-    act(() => {
-      result.current[1]({ search: 'test' })
+
+    await act(async () => {
+      await result.current[1]({ search: 'test' })
     })
 
     // Assert
@@ -251,8 +253,8 @@ describe('createQueryParamStore', () => {
     renderSpy.mockClear()
 
     // Act again with the same value
-    act(() => {
-      result.current[1]({ search: 'test' })
+    await act(async () => {
+      await result.current[1]({ search: 'test' })
     })
     await waitFor(() => {
       expect(result.current[0]).toEqual({ search: 'test' })
@@ -268,9 +270,10 @@ describe('createQueryParamStore', () => {
     renderSpy.mockClear()
 
     // Act with a different value
-    act(() => {
-      result.current[1]({ search: 'test1' })
+    await act(async () => {
+      await result.current[1]({ search: 'test1' })
     })
+
     await waitFor(() => {
       expect(result.current[0]).toEqual({ search: 'test1' })
     })
@@ -282,7 +285,7 @@ describe('createQueryParamStore', () => {
     expect(renderSpy).toHaveBeenCalledTimes(2)
   })
 
-  it('handles errors when logErrorsToConsole is true', () => {
+  it('handles errors when logErrorsToConsole is true', async () => {
     // Arrange
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { useQueryParams } = createQueryParamStore(schema, { logErrorsToConsole: true })
@@ -291,8 +294,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]({ search: false } as any)
+    await act(async () => {
+      await result.current[1]({ search: false } as any)
     })
 
     // Assert
@@ -300,7 +303,7 @@ describe('createQueryParamStore', () => {
     consoleErrorSpy.mockRestore()
   })
 
-  it('handles complex schemas', () => {
+  it('handles complex schemas', async () => {
     // Arrange
     const complexSchema = z.object({
       nested: z.object({
@@ -315,8 +318,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]({
+    await act(async () => {
+      await result.current[1]({
         nested: { value: 42 },
         arrayParam: ['a', 'b'],
         optionalParam: 'test',
@@ -340,8 +343,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]({ search: 'test' })
+    await act(async () => {
+      await result.current[1]({ search: 'test' })
     })
 
     // Assert
@@ -367,7 +370,7 @@ describe('createQueryParamStore', () => {
     expect(result.current[0]).toEqual({})
   })
 
-  it('correctly infers and updates single param with useQueryParam', () => {
+  it('correctly infers and updates single param with useQueryParam', async () => {
     // Arrange
     const { useQueryParam } = createQueryParamStore(schema)
     const { result } = renderHook(() => useQueryParam('page'), {
@@ -375,15 +378,15 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1](5)
+    await act(async () => {
+      await result.current[1](5)
     })
 
     // Assert
     expect(result.current[0]).toBe(5)
   })
 
-  it('applies custom router options', () => {
+  it('applies custom router options', async () => {
     // Arrange
     const customOptions = { locale: 'en-US', scroll: false }
     const { useQueryParam } = createQueryParamStore(schema, customOptions)
@@ -393,8 +396,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]('test')
+    await act(async () => {
+      await result.current[1]('test')
     })
 
     // Assert
@@ -471,8 +474,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]({ search: 'test' })
+    await act(async () => {
+      await result.current[1]({ search: 'test' })
     })
 
     // Assert
@@ -496,8 +499,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]({ search: 'test' })
+    await act(async () => {
+      await result.current[1]({ search: 'test' })
     })
 
     // Assert
@@ -579,7 +582,7 @@ describe('createQueryParamStore', () => {
 
     // Act: Simulate simultaneous state and router updates
     await act(async () => {
-      result.current[1]({ search: 'test1' })
+      await result.current[1]({ search: 'test1' })
       await mockRouter.push({ query: { search: 'test2' } })
     })
 
@@ -605,7 +608,7 @@ describe('createQueryParamStore', () => {
     useRouterMock.mockRestore()
   })
 
-  it('allows multiple instances to operate independently', () => {
+  it('allows multiple instances to operate independently', async () => {
     // Arrange
     const schema1 = z.object({ param1: z.string().optional() })
     const schema2 = z.object({ param2: z.string().optional() })
@@ -616,9 +619,9 @@ describe('createQueryParamStore', () => {
     const { result: result2 } = renderHook(() => useQueryParams2(), { wrapper: MemoryRouterProvider })
 
     // Act
-    act(() => {
-      result1.current[1]({ param1: 'value1' })
-      result2.current[1]({ param2: 'value2' })
+    await act(async () => {
+      await result1.current[1]({ param1: 'value1' })
+      await result2.current[1]({ param2: 'value2' })
     })
 
     // Assert
@@ -672,8 +675,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Update the value
-    act(() => {
-      result.current[1]({ status: 'sent' })
+    await act(async () => {
+      await result.current[1]({ status: 'sent' })
     })
 
     // Assert the update worked
@@ -796,8 +799,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]({
+    await act(async () => {
+      await result.current[1]({
         search: '',
         filters: [],
         page: undefined,
@@ -819,8 +822,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1](
+    await act(async () => {
+      await result.current[1](
         {
           search: '',
           filters: [],
@@ -851,8 +854,8 @@ describe('createQueryParamStore', () => {
     })
 
     // Act
-    act(() => {
-      result.current[1]({
+    await act(async () => {
+      await result.current[1]({
         search: 'test',
         filters: [],
         page: 1,

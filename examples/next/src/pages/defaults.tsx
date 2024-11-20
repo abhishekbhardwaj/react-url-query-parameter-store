@@ -19,14 +19,18 @@ export default function Home() {
         <input
           type="text"
           value={params.search ?? ''}
-          onChange={(e) => setParams({ search: e.target.value })}
+          onChange={async (e) => {
+            await setParams({ search: e.target.value })
+          }}
           placeholder="Search"
           className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <input
           type="number"
           value={params.page ?? ''}
-          onChange={(e) => setParams({ page: parseInt(e.target.value, 10) })}
+          onChange={async (e) => {
+            await setParams({ page: parseInt(e.target.value, 10) })
+          }}
           placeholder="Page"
           className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
