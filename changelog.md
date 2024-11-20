@@ -1,3 +1,15 @@
+# [1.9.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.8.0...v1.9.0) (2024-11-20)
+
+
+### Bug Fixes
+
+* 🐛 update snapshot retrieval in useSyncExternalStore for query parameter initialization ([6193df0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/6193df06beaa884b4772056df9557fd331419850))
+
+
+### Features
+
+* ✨ enable async parameter setting in query param store and update related tests ([f41703c](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/f41703c022e41fae290f7905c6123c1e2a741408))
+
 # [1.8.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.7.1...v1.8.0) (2024-10-24)
 
 
