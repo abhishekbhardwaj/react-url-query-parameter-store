@@ -3,3 +3,4 @@ dist
 *.config.*
 .*.js
 examples/next
+vitest.setup.ts
