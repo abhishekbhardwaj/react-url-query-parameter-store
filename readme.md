@@ -102,7 +102,7 @@ const searchParamsSchema = z.object({
  */
 const routerOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true };
 
-const { useQueryParam, useQueryParams } = createQueryParamStore(searchParamsSchema, routerOptions);
+const { useQueryParam, useQueryParams, clearQueryParams } = createQueryParamStore(searchParamsSchema, routerOptions);
 
 const initialQueryParams = {};
 
@@ -149,6 +149,22 @@ router.push(
     undefined
     { shallow: false }
 );
+
+/////////////////////////////
+// To clear:
+/////////////////////////////
+
+// Clear all tracked parameters from URL
+clearQueryParams();
+
+// Clear specific parameters
+clearQueryParams(['search']);
+
+// Reset parameters to their schema defaults instead of removing
+clearQueryParams(undefined, { resetToDefaults: true });
+
+// Reset specific parameters to defaults
+clearQueryParams(['sortBy'], { resetToDefaults: true });
 ```
 
 ### Next.js Page Router Example
@@ -172,7 +188,7 @@ const searchParamsSchema = z.object({
  */
 const routerOptions: SetRouterQueryParamsOptions = { shallow: false, locale: 'en', scroll: true };
 
-const { useQueryParam, useQueryParams } = createQueryParamStore(searchParamsSchema, routerOptions);
+const { useQueryParam, useQueryParams, clearQueryParams } = createQueryParamStore(searchParamsSchema, routerOptions);
 
 const Home: NextPage<InferGetServerSidePropsType<typeof getServerSideProps>> = ({ query }) => {
   const [search, setSearch] = useQueryParam("search", initialQueryParams);
@@ -207,13 +223,16 @@ Options for customizing router.push/replace behavior:
 - `shallow`: Perform shallow routing (default: true)
 - `locale`: Specify locale for internationalized routing
 - `scroll`: Control scrolling behavior (default: true)
-- `replace`: Replace the current history state instead of adding a new one (default: false).
+- `replace`: Replace the current history state instead of adding a new one (default: false)
+- `logErrorsToConsole`: Log validation and routing errors to console
+- `keepEmptyParameters`: Keep empty values in URL instead of removing them
 
 ### SetQueryParamOptions
 
 Everything in `SetRouterQueryParamsOptions` along with:
 
 - `pathname`: string - Specify the pathname for the URL. Query parameters are added automatically.
+- `resetToDefaults`: boolean - Reset parameters to their Zod schema defaults instead of removing them (used with `clearQueryParams`)
 
 This type extends `SetRouterQueryParamsOptions` to provide more granular control over URL updates. It allows you to change the pathname while updating query parameters, which can be useful for navigating between different pages or routes while maintaining specific query parameter states.
 
@@ -224,9 +243,10 @@ Creates hooks for managing query parameters.
 - `schema`: Zod schema for validating query parameters
 - `routerOptions`: (Optional) Default options for router.push/router.replace
 
-Returns an object with two hooks:
+Returns an object with three functions:
 - `useQueryParam`: Hook for managing a single query parameter
 - `useQueryParams`: Hook for managing multiple query parameters
+- `clearQueryParams`: Function for clearing query parameters (can be used outside React components)
 
 #### `useQueryParam(key, initialQuery?: ParsedUrlQuery)`
 
@@ -249,7 +269,23 @@ Returns:
 - Object containing all current query parameters
 - Setter function for updating multiple parameters (accepts `SetQueryParamOptions`)
 
-## Important Note on Initialization
+#### `clearQueryParams(keys?: Array<keyof Schema>, options?: SetQueryParamOptions)`
+
+Function for clearing query parameters from the URL.
+
+- `keys`: (Optional) Array of parameter keys to clear. If not provided, clears all tracked parameters
+- `options`: (Optional) Navigation options, including `resetToDefaults` to reset to schema defaults instead of removing
+
+Returns:
+- Promise<boolean> indicating success or failure
+
+This function can be used outside of React components and provides two modes:
+1. Without `resetToDefaults`: Completely removes parameters from the URL
+2. With `resetToDefaults: true`: Sets parameters to their Zod schema default values
+
+## Important Notes
+
+### Initialization Behavior
 
 When using `useQueryParam` or `useQueryParams` hooks, the `initialQueryParams` are only used for the first initialization of the store. Subsequent calls to these hooks with different `initialQueryParams` will not affect the store's state. This ensures consistency across your application but may lead to unexpected behavior if not properly understood.
 
@@ -266,3 +302,53 @@ console.log(search1 === search2); // true
 ```
 
 If you need to reset or change the initial state of the store, you'll need to create a new store instance using `createQueryParamStore`.
+
+### Zod Default Values and `undefined` Behavior
+
+**⚠️ Important:** When using Zod schemas with default values, be aware of how `undefined` values are handled:
+
+```typescript
+const schema = z.object({
+  status: z.string().default('active'),
+  count: z.coerce.number().default(0)
+});
+```
+
+When you set a parameter to `undefined`, Zod will automatically apply the default value:
+
+```typescript
+// Setting to undefined
+setParams({ status: undefined }); // Results in status: 'active' (the default)
+
+// This means these two operations have the same effect:
+clearQueryParams(undefined, { resetToDefaults: true }); // Sets to defaults
+setParams({ status: undefined, count: undefined }); // Also sets to defaults
+```
+
+This behavior can be surprising because:
+1. You might expect `undefined` to remove the parameter from the URL
+2. Instead, it applies the schema's default value
+3. This makes it impossible to truly "clear" a parameter that has a default value
+
+**Recommendation:** Be cautious when using Zod default values with URL query parameters. Consider:
+- Using `.optional()` without `.default()` if you want parameters to be truly removable
+- Using runtime initial values instead of schema defaults for more predictable behavior
+- Being explicit about when you want to reset to defaults vs. clear parameters
+
+### `clearQueryParams` Behavior
+
+The `clearQueryParams` function has two distinct modes:
+
+1. **Without `resetToDefaults`** (default): Completely removes parameters from the URL
+   ```typescript
+   clearQueryParams(); // Removes all tracked params from URL
+   clearQueryParams(['search']); // Removes only 'search' param from URL
+   ```
+
+2. **With `resetToDefaults: true`**: Sets parameters to their Zod schema default values
+   ```typescript
+   clearQueryParams(undefined, { resetToDefaults: true }); // Sets all params to defaults
+   clearQueryParams(['search'], { resetToDefaults: true }); // Sets only 'search' to its default
+   ```
+
+Note: The `resetToDefaults` option only works with Zod schema defaults, not runtime initial values.

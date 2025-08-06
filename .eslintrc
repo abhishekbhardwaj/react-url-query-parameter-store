@@ -17,6 +17,7 @@
         "browser": true
     },
     "rules": {
+        "@typescript-eslint/lines-between-class-members": "off",
         "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
         "import/prefer-default-export": "off",
         "import/no-cycle": "off",
