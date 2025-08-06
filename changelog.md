@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.9.0...v1.10.0) (2025-08-06)
+
+
+### Features
+
+* ✨ bugfixing and async/await support + proper clear/reset on params ([#3](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/issues/3)) ([207fe30](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/commit/207fe30e83fe942bd1b5f756e64805e9aa83849e))
+
 # [1.9.0](https://github.com/abhishekbhardwaj/react-url-query-parameter-store/compare/v1.8.0...v1.9.0) (2024-11-20)
 
 
